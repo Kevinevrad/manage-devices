@@ -6,3 +6,8 @@ export * from "./tooltip";
 export * from "./sheet";
 export * from "./skeleton";
 export * from "./sidebar";
+export * from "./collapsible";
+export * from "./dropdown-menu";
+export * from "./avatar";
+export * from "./card";
+export * from "./field";

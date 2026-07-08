@@ -9,20 +9,15 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as RegisterRouteImport } from './routes/register'
-import { Route as LoginRouteImport } from './routes/login'
+import { Route as LayoutRegisterLoginRouteImport } from './routes/_layoutRegisterLogin'
 import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LayoutRegisterLoginRegisterRouteImport } from './routes/_layoutRegisterLogin.register'
+import { Route as LayoutRegisterLoginLoginRouteImport } from './routes/_layoutRegisterLogin.login'
 import { Route as LayoutDashboardRouteImport } from './routes/_layout.dashboard'
 
-const RegisterRoute = RegisterRouteImport.update({
-  id: '/register',
-  path: '/register',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
+const LayoutRegisterLoginRoute = LayoutRegisterLoginRouteImport.update({
+  id: '/_layoutRegisterLogin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LayoutRoute = LayoutRouteImport.update({
@@ -34,6 +29,18 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LayoutRegisterLoginRegisterRoute =
+  LayoutRegisterLoginRegisterRouteImport.update({
+    id: '/register',
+    path: '/register',
+    getParentRoute: () => LayoutRegisterLoginRoute,
+  } as any)
+const LayoutRegisterLoginLoginRoute =
+  LayoutRegisterLoginLoginRouteImport.update({
+    id: '/login',
+    path: '/login',
+    getParentRoute: () => LayoutRegisterLoginRoute,
+  } as any)
 const LayoutDashboardRoute = LayoutDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -42,59 +49,53 @@ const LayoutDashboardRoute = LayoutDashboardRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/login': typeof LoginRoute
-  '/register': typeof RegisterRoute
   '/dashboard': typeof LayoutDashboardRoute
+  '/login': typeof LayoutRegisterLoginLoginRoute
+  '/register': typeof LayoutRegisterLoginRegisterRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/login': typeof LoginRoute
-  '/register': typeof RegisterRoute
   '/dashboard': typeof LayoutDashboardRoute
+  '/login': typeof LayoutRegisterLoginLoginRoute
+  '/register': typeof LayoutRegisterLoginRegisterRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_layout': typeof LayoutRouteWithChildren
-  '/login': typeof LoginRoute
-  '/register': typeof RegisterRoute
+  '/_layoutRegisterLogin': typeof LayoutRegisterLoginRouteWithChildren
   '/_layout/dashboard': typeof LayoutDashboardRoute
+  '/_layoutRegisterLogin/login': typeof LayoutRegisterLoginLoginRoute
+  '/_layoutRegisterLogin/register': typeof LayoutRegisterLoginRegisterRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/register' | '/dashboard'
+  fullPaths: '/' | '/dashboard' | '/login' | '/register'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/register' | '/dashboard'
+  to: '/' | '/dashboard' | '/login' | '/register'
   id:
     | '__root__'
     | '/'
     | '/_layout'
-    | '/login'
-    | '/register'
+    | '/_layoutRegisterLogin'
     | '/_layout/dashboard'
+    | '/_layoutRegisterLogin/login'
+    | '/_layoutRegisterLogin/register'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LayoutRoute: typeof LayoutRouteWithChildren
-  LoginRoute: typeof LoginRoute
-  RegisterRoute: typeof RegisterRoute
+  LayoutRegisterLoginRoute: typeof LayoutRegisterLoginRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/register': {
-      id: '/register'
-      path: '/register'
-      fullPath: '/register'
-      preLoaderRoute: typeof RegisterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
+    '/_layoutRegisterLogin': {
+      id: '/_layoutRegisterLogin'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof LayoutRegisterLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_layout': {
@@ -110,6 +111,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_layoutRegisterLogin/register': {
+      id: '/_layoutRegisterLogin/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof LayoutRegisterLoginRegisterRouteImport
+      parentRoute: typeof LayoutRegisterLoginRoute
+    }
+    '/_layoutRegisterLogin/login': {
+      id: '/_layoutRegisterLogin/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LayoutRegisterLoginLoginRouteImport
+      parentRoute: typeof LayoutRegisterLoginRoute
     }
     '/_layout/dashboard': {
       id: '/_layout/dashboard'
@@ -132,11 +147,23 @@ const LayoutRouteChildren: LayoutRouteChildren = {
 const LayoutRouteWithChildren =
   LayoutRoute._addFileChildren(LayoutRouteChildren)
 
+interface LayoutRegisterLoginRouteChildren {
+  LayoutRegisterLoginLoginRoute: typeof LayoutRegisterLoginLoginRoute
+  LayoutRegisterLoginRegisterRoute: typeof LayoutRegisterLoginRegisterRoute
+}
+
+const LayoutRegisterLoginRouteChildren: LayoutRegisterLoginRouteChildren = {
+  LayoutRegisterLoginLoginRoute: LayoutRegisterLoginLoginRoute,
+  LayoutRegisterLoginRegisterRoute: LayoutRegisterLoginRegisterRoute,
+}
+
+const LayoutRegisterLoginRouteWithChildren =
+  LayoutRegisterLoginRoute._addFileChildren(LayoutRegisterLoginRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LayoutRoute: LayoutRouteWithChildren,
-  LoginRoute: LoginRoute,
-  RegisterRoute: RegisterRoute,
+  LayoutRegisterLoginRoute: LayoutRegisterLoginRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
