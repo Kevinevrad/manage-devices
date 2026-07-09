@@ -1,7 +1,30 @@
+// import { MetricsCard } from "@/components";
+import { Card, CardContent, CardHeader, MetricsCard } from "@/components";
+import { stats } from "@/data/stats";
+// import { Separator } from "@base-ui/react";
+// import { IconDeviceLaptop } from "@tabler/icons-react";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_layout/dashboard")({
   component: () => {
-    return <div>Hello "/_layout/dashboard"!</div>;
+    return (
+      <>
+        <div className="border px-12 py-12 rounded-xl bg-[url('../assets/imgs/backgrounds/registerBg.svg')] bg-left bg-cover bg-no-repeat ">
+          <div className="  text-secondary">
+            <h1 className="text-3xl font-extrabold uppercase ">
+              Ravis de vous revoir Mr ASSOKO{" "}
+            </h1>
+            <hr className="mb-2" />
+            <p>
+              Gerer tout l'ensemble de votre parc informatique sans prise de
+              tête
+            </p>
+          </div>
+        </div>
+        <>
+          <MetricsCard stats={stats} />
+        </>
+      </>
+    );
   },
 });
