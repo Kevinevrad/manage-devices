@@ -18,36 +18,23 @@ const variantStyles: Record<MetricsCardVariant, string> = {
   default: "bg-secondary border-2 border-primary text-dark",
 };
 
-export function MetricsCard({ stats, className }: MetricsCardsProps) {
+export function MetricsCard(stats: MetricsCardsProps) {
+  const Icon = stats.icon;
+
   return (
-    <div
+    <Card
       className={cn(
-        "grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5     auto-rows-min   md:grid-cols-4",
-        className,
+        "border-none shadow-sm rounded-xl py-0 text-white aspect-video bg-muted/50 border-2 h-full",
+        `${variantStyles[stats.variant]}`,
       )}
     >
-      {stats.map((stat) => {
-        const Icon = stat.icon;
-        return (
-          <Card
-            key={stat.id}
-            className={cn(
-              "border-none shadow-sm rounded-xl py-0 text-white aspect-video bg-muted/50 border-2",
-              variantStyles[stat.variant],
-            )}
-          >
-            <CardContent className="flex flex-col gap-3 h-full p-4 items-center justify-center">
-              <div className="flex items-center gap-2 text-sm font-medium opacity-95">
-                <Icon size={18} stroke={1.75} />
-                <span>{stat.label}</span>
-              </div>
-              <div className="text-5xl font-bold leading-none">
-                {stat.value}
-              </div>
-            </CardContent>
-          </Card>
-        );
-      })}
-    </div>
+      <CardContent className="flex flex-col gap-3 h-full p-4 items-center justify-center">
+        <div className="flex items-center gap-2 text-sm font-medium opacity-95">
+          <Icon size={18} stroke={1.75} />
+          <span>{stats.label}</span>
+        </div>
+        <div className="text-5xl font-bold leading-none">{stats.value}</div>
+      </CardContent>
+    </Card>
   );
 }

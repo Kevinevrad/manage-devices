@@ -13,14 +13,7 @@ export const stats: MetricsCardData[] = [
     label: "Total Laptops",
     value: 47,
     icon: IconDeviceLaptop,
-    variant: "default",
-  },
-  {
-    id: "desktops",
-    label: "Total Desktops",
-    value: 3,
-    icon: IconDeviceDesktop,
-    variant: "default",
+    variant: "teal",
   },
   {
     id: "licences",
@@ -29,6 +22,14 @@ export const stats: MetricsCardData[] = [
     icon: IconLicense,
     variant: "default",
   },
+  {
+    id: "desktops",
+    label: "Total Desktops",
+    value: 3,
+    icon: IconDeviceDesktop,
+    variant: "indigo",
+  },
+
   {
     id: "warehouse",
     label: "In warehouse",

@@ -7,7 +7,7 @@ import type { Icon as TablerIcon } from "@tabler/icons-react";
 export type MetricsCardVariant =
   "teal" | "red" | "indigo" | "pink" | "olive" | "default";
 
-export interface MetricsCardData {
+export interface MetricsCardsProps {
   /** Identifiant unique (utilisé comme key) */
   id: string;
   /** Libellé affiché en haut de la carte (ex: "Total orders") */
@@ -20,7 +20,6 @@ export interface MetricsCardData {
   variant: MetricsCardVariant;
 }
 
-export interface MetricsCardsProps {
-  stats: MetricsCardData[];
-  className?: string;
-}
+// export interface MetricsCardsProps {
+//   stats: MetricsCardData;
+// }
