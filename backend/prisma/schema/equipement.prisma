@@ -1,0 +1,18 @@
+model Equipement {
+
+    id  Int @id @default(autoincrement())
+    nom String
+    type String 
+    marque String
+    prix String 
+    numSerie String @unique
+    statut String   @default("Non Affecté") // "En service", "En stock", "En panne", "Rebut"
+    dateAchat DateTime @default(now())
+
+
+    userId Int?
+    utilisateur User? @relation(fields: [userId], references: [id])
+
+
+    logiciels     LicencesSurEquipement[]
+}
