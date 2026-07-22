@@ -8,9 +8,10 @@
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
     // verbatimModuleSyntax : ,
-    "module": "nodenext",
+    "module": "esnext",
     "target": "esnext",
     "types": [],
+    "moduleResolution": "bundler",
     // For nodejs:
     // "lib": ["esnext"],
     // "types": ["node"],
@@ -40,6 +41,8 @@
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "ignoreDeprecations": "6.0"
   }
 }
