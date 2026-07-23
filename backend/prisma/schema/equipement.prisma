@@ -15,4 +15,5 @@ model Equipement {
 
 
     logiciels     LicencesSurEquipement[]
+    historiquesAffectations Affectation[]
 }

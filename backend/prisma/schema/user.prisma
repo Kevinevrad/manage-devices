@@ -9,4 +9,5 @@ model User {
     role      String  @default("user") // "user", "admin", "technicien"
 
     equipements Equipement[]
+    historiquesAffectations Affectation[]
 }

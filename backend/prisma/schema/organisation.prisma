@@ -1,0 +1,5 @@
+model Organisation {
+    id  Int @id @default(autoincrement())
+    nom String 
+    
+}

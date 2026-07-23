@@ -12,14 +12,3 @@ model Logiciel {
     affectations LicencesSurEquipement[]
 
 }
-model LicencesSurEquipement {
-    equipementId Int
-    logicielId Int 
-    installeLe DateTime @default(now())
-
-    equipement Equipement @relation(fields: [equipementId], references: [id], onDelete: Cascade)
-    logiciel Logiciel @relation(fields: [logicielId], references: [id], onDelete: Cascade)
-
-    @@id([equipementId, logicielId]) 
-    // Clé primaire composite
-}

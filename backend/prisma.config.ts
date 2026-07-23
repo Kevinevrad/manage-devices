@@ -6,9 +6,12 @@ export default defineConfig({
   schema: "prisma",
   migrations: {
     path: "prisma/migrations",
+    seed: "tsx prisma/seed.ts",
   },
   datasource: {
     // La variable d'environnement ou le chemin direct est géré ici
     url: env("DATABASE_URL"),
   },
+
+  // AJOUTEZ CE BLOC POUR PRISMA 7 :
 });

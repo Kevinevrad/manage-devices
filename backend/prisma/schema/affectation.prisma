@@ -1,0 +1,14 @@
+model Affectation {
+    id Int @id @default(autoincrement())
+    equipementId Int 
+    userId Int 
+
+    dateDebut DateTime @default(now())
+    dateFin DateTime?
+
+    commentaire   String?   // Ex: "Remis avec sacoche et chargeur", "Matériel neuf"
+
+    equipements Equipement @relation(fields: [equipementId], references: [id], onDelete: Cascade)
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+}
