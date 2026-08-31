@@ -1,98 +1,64 @@
 import {
-  IconTerminal2,
-  IconBotId,
-  IconBook,
-  IconSettings2,
+  IconChartBar,
+  IconDeviceDesktop,
+  IconLayoutDashboard,
   IconLifebuoy,
   IconSend,
+  IconSettings2,
+  IconUsers,
 } from "@tabler/icons-react";
 
 export const navs = {
   navMain: [
     {
-      title: "Playground",
+      title: "Vue d'ensemble",
       url: "#",
-      icon: IconTerminal2,
+      icon: IconLayoutDashboard,
       isActive: true,
-      items: [
-        {
-          title: "History",
-          url: "#",
-        },
-        {
-          title: "Starred",
-          url: "#",
-        },
-        {
-          title: "Settings",
-          url: "#",
-        },
-      ],
     },
     {
-      title: "Models",
+      title: "Parc matériel",
       url: "#",
-      icon: IconBotId,
+      icon: IconDeviceDesktop,
       items: [
         {
-          title: "Genesis",
+          title: "Équipements",
           url: "#",
         },
         {
-          title: "Explorer",
+          title: "Licences",
           url: "#",
         },
         {
-          title: "Quantum",
+          title: "Affectations",
           url: "#",
         },
       ],
     },
     {
-      title: "Documentation",
+      title: "Utilisateurs",
       url: "#",
-      icon: IconBook,
+      icon: IconUsers,
+    },
+    {
+      title: "Rapports",
+      url: "#",
+      icon: IconChartBar,
       items: [
         {
-          title: "Introduction",
+          title: "Inventaire",
           url: "#",
         },
         {
-          title: "Get Started",
-          url: "#",
-        },
-        {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
+          title: "Licences expirantes",
           url: "#",
         },
       ],
     },
     {
-      title: "Settings",
+      title: "Paramètres",
       url: "#",
       icon: IconSettings2,
-      items: [
-        {
-          title: "General",
-          url: "#",
-        },
-        {
-          title: "Team",
-          url: "#",
-        },
-        {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
-          url: "#",
-        },
-      ],
     },
   ],
 

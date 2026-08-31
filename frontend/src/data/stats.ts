@@ -1,47 +1,51 @@
 import type { MetricsCardData } from "@/components";
 import {
-  IconBox,
   IconCircleCheck,
   IconDeviceDesktop,
   IconDeviceLaptop,
   IconLicense,
+  IconTool,
 } from "@tabler/icons-react";
 
 export const stats: MetricsCardData[] = [
   {
     id: "laptops",
-    label: "Total Laptops",
+    label: "Ordinateurs portables",
     value: 47,
     icon: IconDeviceLaptop,
     variant: "teal",
-  },
-  {
-    id: "licences",
-    label: "Total Licences",
-    value: 10,
-    icon: IconLicense,
-    variant: "default",
+    trend: 8,
   },
   {
     id: "desktops",
-    label: "Total Desktops",
-    value: 3,
+    label: "Postes fixes",
+    value: 32,
     icon: IconDeviceDesktop,
     variant: "indigo",
+    trend: 2,
   },
-
   {
-    id: "warehouse",
-    label: "In warehouse",
-    value: 32,
-    icon: IconBox,
+    id: "licences",
+    label: "Licences actives",
+    value: 120,
+    icon: IconLicense,
     variant: "default",
+    trend: 12,
   },
   {
-    id: "sent",
-    label: "Sent",
-    value: 2,
+    id: "assigned",
+    label: "Équipements affectés",
+    value: 45,
     icon: IconCircleCheck,
-    variant: "default",
+    variant: "olive",
+    trend: 6,
+  },
+  {
+    id: "maintenance",
+    label: "En panne / SAV",
+    value: 5,
+    icon: IconTool,
+    variant: "red",
+    trend: -3,
   },
 ];

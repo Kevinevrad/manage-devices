@@ -26,6 +26,14 @@ import {
 export function DropDownNav({ user }: { user: User }) {
   const { isMobile } = useSidebar();
 
+  const initials =
+    user.name
+      .split(" ")
+      .map((part) => part.charAt(0))
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() || "U";
+
   return (
     <SidebarMenu>
       <SidebarMenuItem className="flex flex-col">
@@ -38,7 +46,9 @@ export function DropDownNav({ user }: { user: User }) {
             >
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                <AvatarFallback className="rounded-lg">
+                  {initials}
+                </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{user.name}</span>
@@ -58,7 +68,9 @@ export function DropDownNav({ user }: { user: User }) {
                 <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                   <Avatar className="h-8 w-8 rounded-lg">
                     <AvatarImage src={user.avatar} alt={user.name} />
-                    <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                    <AvatarFallback className="rounded-lg">
+                      {initials}
+                    </AvatarFallback>
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-medium">{user.name}</span>
@@ -70,18 +82,18 @@ export function DropDownNav({ user }: { user: User }) {
               <DropdownMenuGroup>
                 <DropdownMenuItem>
                   <IconSparkles />
-                  Upgrade to Pro
+                  Passer à Pro
                 </DropdownMenuItem>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
                 <DropdownMenuItem>
                   <IconRosetteDiscountCheckFilled />
-                  Account
+                  Compte
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <IconCreditCard />
-                  Billing
+                  Facturation
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <IconBell />
@@ -91,7 +103,7 @@ export function DropDownNav({ user }: { user: User }) {
               <DropdownMenuSeparator />
               <DropdownMenuItem>
                 <IconLogout />
-                Log out
+                Se déconnecter
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenuGroup>

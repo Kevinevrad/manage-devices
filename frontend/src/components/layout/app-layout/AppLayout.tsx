@@ -1,4 +1,5 @@
 // AppLayout.tsx
+import { IconBell, IconSearch } from "@tabler/icons-react";
 import {
   AppSideBar,
   Breadcrumb,
@@ -7,6 +8,8 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
+  Button,
+  Input,
   Separator,
   SidebarInset,
   SidebarProvider,
@@ -20,8 +23,8 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
     <SidebarProvider>
       <AppSideBar navMain={navs.navMain} user={user} />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2">
-          <div className="flex items-center gap-2 px-4">
+        <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background/80 backdrop-blur">
+          <div className="flex flex-1 items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator
               orientation="vertical"
@@ -30,25 +33,33 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="#">Dashboard</BreadcrumbLink>
+                  <BreadcrumbLink href="#">Parc</BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>Home</BreadcrumbPage>
+                  <BreadcrumbPage>Vue d'ensemble</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
           </div>
-        </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          {/* <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-            <div className="aspect-video rounded-xl bg-muted/50" />
-            <div className="aspect-video rounded-xl bg-muted/50" />
-            <div className="aspect-video rounded-xl bg-muted/50" />
+          <div className="hidden items-center gap-2 px-4 md:flex">
+            <div className="relative">
+              <IconSearch className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Rechercher un équipement, une licence…"
+                className="h-9 w-64 rounded-xl bg-muted/50 pl-8 pr-10"
+              />
+              <kbd className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
+                ⌘K
+              </kbd>
+            </div>
+            <Button variant="ghost" size="icon" className="relative">
+              <IconBell />
+              <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-rose-500" />
+            </Button>
           </div>
-          <div className="min-h-screen flex-1 rounded-xl bg-muted/50 md:min-h-min" /> */}
-          {children}
-        </div>
+        </header>
+        <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );

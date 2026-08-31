@@ -35,7 +35,7 @@ export function TableCellViewer({ item }: { item: DataTableItem }) {
   const isMobile = useIsMobile();
 
   return (
-    <Drawer direction={isMobile ? "bottom" : "right"}>
+    <Drawer swipeDirection={isMobile ? "down" : "right"}>
       <DrawerTrigger>
         <Button variant="link" className="w-fit px-0 text-left text-foreground">
           {item.header}

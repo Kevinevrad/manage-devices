@@ -18,8 +18,13 @@ export interface MetricsCardsProps {
   icon: TablerIcon;
   /** Couleur de fond de la carte */
   variant: MetricsCardVariant;
+  /** Évolution en pourcentage (ex: +8, -3). Affiche un badge de tendance. */
+  trend?: number;
+  /** Position dans la liste — utilisée pour décaler l'animation d'entrée */
+  index?: number;
 }
 
-// export interface MetricsCardsProps {
-//   stats: MetricsCardData;
-// }
+/**
+ * Alias historique : `MetricsCardData` est utilisé par `src/data/stats.ts`.
+ */
+export type MetricsCardData = MetricsCardsProps;

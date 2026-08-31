@@ -1,5 +1,5 @@
 export const user = {
-  name: "shadcn",
-  email: "m@example.com",
-  avatar: "/avatars/shadcn.jpg",
+  name: "Kevin Assoko",
+  email: "kevin.assoko@infratp.com",
+  avatar: "/avatars/kevin-assoko.jpg",
 };
