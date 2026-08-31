@@ -12,7 +12,7 @@ export const navs = {
   navMain: [
     {
       title: "Vue d'ensemble",
-      url: "#",
+      url: "/dashboard",
       icon: IconLayoutDashboard,
       isActive: true,
     },
@@ -23,15 +23,15 @@ export const navs = {
       items: [
         {
           title: "Équipements",
-          url: "#",
+          url: "/equipements",
         },
         {
           title: "Licences",
-          url: "#",
+          url: "/licences",
         },
         {
           title: "Affectations",
-          url: "#",
+          url: "/affectations",
         },
       ],
     },

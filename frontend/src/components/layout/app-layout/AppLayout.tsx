@@ -1,5 +1,6 @@
 // AppLayout.tsx
 import { IconBell, IconSearch } from "@tabler/icons-react";
+import { useRouterState } from "@tanstack/react-router";
 import {
   AppSideBar,
   Breadcrumb,
@@ -18,7 +19,20 @@ import {
 import type { AppLayoutProps } from "./app-layout.types";
 import { navs, user } from "@/data";
 
+/** Libellé du fil d'Ariane pour chaque page connue. */
+const breadcrumbLabels: Record<string, string> = {
+  "/dashboard": "Vue d'ensemble",
+  "/equipements": "Équipements",
+  "/licences": "Licences",
+  "/affectations": "Affectations",
+};
+
 export const AppLayout = ({ children }: AppLayoutProps) => {
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
+  });
+  const currentPage = breadcrumbLabels[pathname] ?? "Vue d'ensemble";
+
   return (
     <SidebarProvider>
       <AppSideBar navMain={navs.navMain} user={user} />
@@ -37,7 +51,7 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>Vue d'ensemble</BreadcrumbPage>
+                  <BreadcrumbPage>{currentPage}</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>

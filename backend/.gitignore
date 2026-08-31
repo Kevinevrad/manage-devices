@@ -1,7 +1,18 @@
+# Dépendances
 node_modules
-# Keep environment variables out of version control
+
+# Variables d'environnement (garde les secrets hors du dépôt)
 .env
 
-/generated/prisma
+# Client Prisma généré (régénérable via `npm run db:generate`)
+prisma/generated/
 
-/generated/prisma
+# Base de données SQLite locale
+prisma/*.db
+prisma/*.db-journal
+
+# Journaux locaux
+*.log
+
+# Sortie de build
+dist/

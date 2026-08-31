@@ -4,7 +4,7 @@ model Equipement {
     nom String
     type String 
     marque String
-    prix String 
+    prix Float  // Prix d'achat en euros
     numSerie String @unique
     statut String   @default("Non Affecté") // "En service", "En stock", "En panne", "Rebut"
     dateAchat DateTime @default(now())

@@ -19,4 +19,23 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    // Primitives shadcn/ui : elles exportent volontairement des variantes
+    // (badgeVariants, buttonVariants, tabsListVariants) et des hooks
+    // (useSidebar) à côté des composants — pattern officiel shadcn.
+    files: ['src/components/ui/**/*.{ts,tsx}'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
+  {
+    // Routes TanStack : le file-based routing impose l'export `Route` de
+    // createFileRoute dans le même fichier que le composant de page (et ce
+    // composant a besoin de hooks : useSearch, useNavigate…). La règle
+    // fast-refresh est donc désactivée pour ce dossier uniquement.
+    files: ['src/routes/**/*.{ts,tsx}'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
 ])

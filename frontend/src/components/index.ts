@@ -4,3 +4,4 @@ export * from "./navs";
 export * from "./forms";
 export * from "./cards";
 export * from "./others";
+export * from "./tables";

@@ -1,3 +1,6 @@
+import { IconChevronRight } from "@tabler/icons-react";
+import { Link, useRouterState } from "@tanstack/react-router";
+
 import {
   Collapsible,
   CollapsibleContent,
@@ -11,8 +14,78 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "../../ui";
-import { IconChevronRight } from "@tabler/icons-react";
-import type { NavItem } from "./nav.types";
+import type { NavItem, NavSubItem } from "./nav.types";
+
+/**
+ * Chemins réellement enregistrés dans le routeur — permet de rendre
+ * les liens de la sidebar avec `Link` (navigation SPA + état actif).
+ */
+type AppRoutePath =
+  | "/"
+  | "/dashboard"
+  | "/equipements"
+  | "/licences"
+  | "/affectations";
+
+const isRouteLink = (url: string): url is AppRoutePath =>
+  url === "/" ||
+  url === "/dashboard" ||
+  url === "/equipements" ||
+  url === "/licences" ||
+  url === "/affectations";
+
+/** Bouton principal d'un groupe de navigation. */
+function NavButton({ item, active }: { item: NavItem; active: boolean }) {
+  if (isRouteLink(item.url)) {
+    return (
+      <SidebarMenuButton
+        tooltip={item.title}
+        isActive={active}
+        render={<Link to={item.url} />}
+      >
+        <item.icon />
+        <span>{item.title}</span>
+      </SidebarMenuButton>
+    );
+  }
+
+  return (
+    <SidebarMenuButton tooltip={item.title}>
+      <a href={item.url} className="flex flex-row items-center gap-2">
+        <item.icon />
+        <span>{item.title}</span>
+      </a>
+    </SidebarMenuButton>
+  );
+}
+
+/** Sous-élément d'un groupe de navigation. */
+function NavSubButton({
+  item,
+  active,
+}: {
+  item: NavSubItem;
+  active: boolean;
+}) {
+  if (isRouteLink(item.url)) {
+    return (
+      <SidebarMenuSubButton
+        isActive={active}
+        render={<Link to={item.url} />}
+      >
+        <span>{item.title}</span>
+      </SidebarMenuSubButton>
+    );
+  }
+
+  return (
+    <SidebarMenuSubButton>
+      <a href={item.url}>
+        <span>{item.title}</span>
+      </a>
+    </SidebarMenuSubButton>
+  );
+}
 
 export const Nav = ({
   items,
@@ -21,6 +94,10 @@ export const Nav = ({
   items: NavItem[];
   navLabel: string;
 }) => {
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
+  });
+
   return (
     <>
       <SidebarGroupLabel>{navLabel}</SidebarGroupLabel>
@@ -28,12 +105,7 @@ export const Nav = ({
         {items.map((item) => (
           <Collapsible key={item.title} defaultOpen={item.isActive}>
             <SidebarMenuItem className="flex flex-col">
-              <SidebarMenuButton tooltip={item.title}>
-                <a href={item.url} className="flex flex-row gap-2 items-center">
-                  <item.icon />
-                  <span>{item.title}</span>
-                </a>
-              </SidebarMenuButton>
+              <NavButton item={item} active={pathname === item.url} />
               {item.items?.length ? (
                 <>
                   <CollapsibleTrigger>
@@ -46,11 +118,10 @@ export const Nav = ({
                     <SidebarMenuSub>
                       {item.items?.map((subItem) => (
                         <SidebarMenuSubItem key={subItem.title}>
-                          <SidebarMenuSubButton>
-                            <a href={subItem.url}>
-                              <span>{subItem.title}</span>
-                            </a>
-                          </SidebarMenuSubButton>
+                          <NavSubButton
+                            item={subItem}
+                            active={pathname === subItem.url}
+                          />
                         </SidebarMenuSubItem>
                       ))}
                     </SidebarMenuSub>
