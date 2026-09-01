@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import {
   IconClipboardList,
   IconDownload,
@@ -5,15 +6,18 @@ import {
 } from "@tabler/icons-react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
-import { Button, Tabs, TabsList, TabsTrigger } from "@/components";
+import {
+  Button,
+  ChargementDonnees,
+  ErreurDonnees,
+  Tabs,
+  TabsList,
+  TabsTrigger,
+} from "@/components";
 import { MetricsSection } from "@/components/sections/metrics";
 import { AffectationsTable } from "@/components/tables";
-import {
-  affectationServices,
-  affectations,
-  affectationsStats,
-  compterParService,
-} from "@/data/affectations";
+import { useAffectations, useEquipements } from "@/hooks/api";
+import { construireAffectationsStats } from "@/lib/stats";
 
 export const Route = createFileRoute("/_layout/affectations")({
   /** Synchronise le service du sous-menu avec l'URL (?service=…) */
@@ -26,8 +30,40 @@ export const Route = createFileRoute("/_layout/affectations")({
 function AffectationsPage() {
   const { service } = Route.useSearch();
   const navigate = useNavigate();
-  const serviceActif =
-    service && affectationServices.includes(service) ? service : "tous";
+  const {
+    data: affectations,
+    isPending,
+    isError,
+    error,
+    refetch,
+  } = useAffectations();
+  const { data: equipements } = useEquipements();
+
+  /** Services (départements) distincts, dans l'ordre d'apparition. */
+  const services = useMemo(
+    () => [...new Set((affectations ?? []).map((a) => a.service))],
+    [affectations],
+  );
+  const stats = useMemo(
+    () =>
+      affectations && equipements
+        ? construireAffectationsStats(affectations, equipements)
+        : [],
+    [affectations, equipements],
+  );
+
+  if (isError) {
+    return (
+      <ErreurDonnees message={error.message} onReessayer={() => void refetch()} />
+    );
+  }
+  if (isPending || !affectations || !equipements) {
+    return <ChargementDonnees />;
+  }
+
+  const serviceActif = service && services.includes(service) ? service : "tous";
+  const compterParService = (valeur: string): number =>
+    affectations.filter((affectation) => affectation.service === valeur).length;
 
   return (
     <div className="flex flex-col gap-6">
@@ -59,7 +95,7 @@ function AffectationsPage() {
       </section>
 
       <MetricsSection
-        stats={affectationsStats}
+        stats={stats}
         title="Affectation du matériel"
         description="Répartition des équipements entre les utilisateurs et les services."
       />
@@ -85,7 +121,7 @@ function AffectationsPage() {
                 {affectations.length}
               </span>
             </TabsTrigger>
-            {affectationServices.map((serviceItem) => (
+            {services.map((serviceItem) => (
               <TabsTrigger
                 key={serviceItem}
                 value={serviceItem}

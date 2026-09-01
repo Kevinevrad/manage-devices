@@ -1,15 +1,19 @@
+import { useMemo } from "react";
 import { IconDeviceDesktop, IconDownload, IconPlus } from "@tabler/icons-react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
-import { Button, Tabs, TabsList, TabsTrigger } from "@/components";
+import {
+  Button,
+  ChargementDonnees,
+  ErreurDonnees,
+  Tabs,
+  TabsList,
+  TabsTrigger,
+} from "@/components";
 import { MetricsSection } from "@/components/sections/metrics";
 import { EquipementsTable } from "@/components/tables";
-import {
-  compterParCategorie,
-  equipementCategories,
-  equipements,
-  equipementsStats,
-} from "@/data/equipements";
+import { useEquipements } from "@/hooks/api";
+import { construireEquipementsStats } from "@/lib/stats";
 
 export const Route = createFileRoute("/_layout/equipements")({
   /** Synchronise la catégorie du sous-menu avec l'URL (?categorie=…) */
@@ -23,8 +27,40 @@ export const Route = createFileRoute("/_layout/equipements")({
 function EquipementsPage() {
   const { categorie } = Route.useSearch();
   const navigate = useNavigate();
+  const {
+    data: equipements,
+    isPending,
+    isError,
+    error,
+    refetch,
+  } = useEquipements();
+
+  /** Catégories (types) distinctes du parc, dans l'ordre d'apparition. */
+  const categories = useMemo(
+    () => [...new Set((equipements ?? []).map((e) => e.type))],
+    [equipements],
+  );
+  const stats = useMemo(
+    () => (equipements ? construireEquipementsStats(equipements) : []),
+    [equipements],
+  );
+
+  if (isError) {
+    return (
+      <ErreurDonnees
+        message={error.message}
+        onReessayer={() => void refetch()}
+      />
+    );
+  }
+  if (isPending || !equipements) {
+    return <ChargementDonnees />;
+  }
+
   const categorieActive =
-    categorie && equipementCategories.includes(categorie) ? categorie : "tous";
+    categorie && categories.includes(categorie) ? categorie : "tous";
+  const compterParCategorie = (valeur: string): number =>
+    equipements.filter((equipement) => equipement.type === valeur).length;
 
   return (
     <div className="flex flex-col gap-6">
@@ -55,7 +91,7 @@ function EquipementsPage() {
         </div>
       </section>
 
-      <MetricsSection stats={equipementsStats} />
+      <MetricsSection stats={stats} />
 
       {/* Sous-menu — équipements séparés par catégorie */}
       <div className="overflow-x-auto pb-1">
@@ -78,7 +114,7 @@ function EquipementsPage() {
                 {equipements.length}
               </span>
             </TabsTrigger>
-            {equipementCategories.map((categorieItem) => (
+            {categories.map((categorieItem) => (
               <TabsTrigger
                 key={categorieItem}
                 value={categorieItem}
@@ -98,5 +134,4 @@ function EquipementsPage() {
     </div>
   );
 }
-
 

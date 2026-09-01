@@ -20,4 +20,6 @@ export type AppSidebarProps = React.ComponentProps<typeof Sidebar> & {
   // teams: Team[];
   navMain: NavItem[];
   // projects: Project[];
+  /** Déconnexion (propagée au menu utilisateur du footer). */
+  onDeconnexion?: () => void;
 };

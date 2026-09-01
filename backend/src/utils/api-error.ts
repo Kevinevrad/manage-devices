@@ -21,6 +21,16 @@ export class ApiError extends Error {
     return new ApiError(404, message);
   }
 
+  /** 401 — non authentifié (jeton absent, invalide ou expiré). */
+  static unauthorized(message: string): ApiError {
+    return new ApiError(401, message);
+  }
+
+  /** 403 — authentifié mais droits insuffisants. */
+  static forbidden(message: string): ApiError {
+    return new ApiError(403, message);
+  }
+
   /** 409 — conflit (unicité, sièges de licence épuisés…). */
   static conflict(message: string): ApiError {
     return new ApiError(409, message);

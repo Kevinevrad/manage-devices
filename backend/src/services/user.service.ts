@@ -2,7 +2,8 @@ import { Prisma } from "../../prisma/generated/prisma/client";
 
 import { prisma } from "../config/prisma";
 import { ApiError } from "../utils/api-error";
-import { texteObligatoire } from "../utils/validation";
+import { hacherMotDePasse, motDePasseValide } from "../utils/auth";
+import { emailObligatoire, texteObligatoire } from "../utils/validation";
 
 /** Rôles autorisés pour un utilisateur. */
 const ROLES = ["user", "admin", "technicien"] as const;
@@ -20,6 +21,7 @@ interface UserPayload {
   nom?: unknown;
   prenom?: unknown;
   email?: unknown;
+  motDePasse?: unknown;
   structure?: unknown;
   service?: unknown;
   role?: unknown;
@@ -39,11 +41,7 @@ export async function verifierUtilisateur(id: number) {
 
 /** Valide une adresse e-mail simple (texte@domaine.tld). */
 function validerEmail(valeur: unknown, champ: string): string {
-  const email = texteObligatoire(valeur, champ);
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    throw ApiError.badRequest(`Le champ « ${champ} » doit être un e-mail valide.`);
-  }
-  return email;
+  return emailObligatoire(valeur, champ);
 }
 
 /** Valide le rôle s'il est fourni. */
@@ -85,6 +83,8 @@ export async function creerUser(payload: UserPayload) {
     nom: texteObligatoire(payload.nom, "nom"),
     prenom: texteObligatoire(payload.prenom, "prenom"),
     email: validerEmail(payload.email, "email"),
+    // Mot de passe initial (hashé) — requis pour la connexion
+    motDePasse: await hacherMotDePasse(motDePasseValide(payload.motDePasse)),
     structure: texteObligatoire(payload.structure, "structure"),
     service: texteObligatoire(payload.service, "service"),
   };

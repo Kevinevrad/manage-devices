@@ -1,6 +1,6 @@
 // AppLayout.tsx
 import { IconBell, IconSearch } from "@tabler/icons-react";
-import { useRouterState } from "@tanstack/react-router";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   AppSideBar,
   Breadcrumb,
@@ -16,8 +16,9 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components";
+import { useAuth } from "@/hooks/auth";
 import type { AppLayoutProps } from "./app-layout.types";
-import { navs, user } from "@/data";
+import { navs } from "@/data";
 
 /** Libellé du fil d'Ariane pour chaque page connue. */
 const breadcrumbLabels: Record<string, string> = {
@@ -31,11 +32,27 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   });
+  const navigate = useNavigate();
+  const { utilisateur, deconnecter } = useAuth();
   const currentPage = breadcrumbLabels[pathname] ?? "Vue d'ensemble";
+
+  /** Déconnexion puis retour au formulaire de connexion. */
+  const deconnecterEtRediriger = () => {
+    deconnecter();
+    void navigate({ to: "/login" });
+  };
 
   return (
     <SidebarProvider>
-      <AppSideBar navMain={navs.navMain} user={user} />
+      <AppSideBar
+        navMain={navs.navMain}
+        onDeconnexion={deconnecterEtRediriger}
+        user={{
+          name: utilisateur?.nomComplet ?? "…",
+          email: utilisateur?.email ?? "",
+          avatar: "",
+        }}
+      />
       <SidebarInset>
         <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-background/80 backdrop-blur">
           <div className="flex flex-1 items-center gap-2 px-4">

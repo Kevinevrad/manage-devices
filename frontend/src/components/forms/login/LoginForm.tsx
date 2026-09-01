@@ -1,6 +1,10 @@
-import { Link } from "@tanstack/react-router";
+import { useState } from "react";
+import type { FormEvent } from "react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { IconAlertCircle } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/auth";
 import {
   Card,
   CardContent,
@@ -18,6 +22,29 @@ import {
 import type { LoginFormProps } from "./login.types";
 
 export function LoginForm({ className, ...props }: LoginFormProps) {
+  const navigate = useNavigate();
+  const { connecter } = useAuth();
+  const [email, setEmail] = useState("");
+  const [motDePasse, setMotDePasse] = useState("");
+  const [erreur, setErreur] = useState<string | null>(null);
+  const [envoi, setEnvoi] = useState(false);
+
+  async function soumettre(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setErreur(null);
+    setEnvoi(true);
+    try {
+      await connecter(email, motDePasse);
+      await navigate({ to: "/dashboard" });
+    } catch (error) {
+      setErreur(
+        error instanceof Error ? error.message : "Connexion impossible.",
+      );
+    } finally {
+      setEnvoi(false);
+    }
+  }
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
@@ -28,7 +55,7 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form>
+          <form onSubmit={soumettre}>
             <FieldGroup>
               <Field>
                 <Button variant="outline" type="button">
@@ -60,6 +87,9 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
                   type="email"
                   placeholder="prenom.nom@entreprise.com"
                   required
+                  autoComplete="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
                 />
               </Field>
               <Field>
@@ -72,10 +102,25 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
                     Mot de passe oublié ?
                   </a>
                 </div>
-                <Input id="password" type="password" required />
+                <Input
+                  id="password"
+                  type="password"
+                  required
+                  autoComplete="current-password"
+                  value={motDePasse}
+                  onChange={(event) => setMotDePasse(event.target.value)}
+                />
               </Field>
+              {erreur && (
+                <p className="flex items-center gap-1.5 text-sm text-rose-600 dark:text-rose-400">
+                  <IconAlertCircle className="size-4 shrink-0" />
+                  {erreur}
+                </p>
+              )}
               <Field>
-                <Button type="submit">Se connecter</Button>
+                <Button type="submit" disabled={envoi}>
+                  {envoi ? "Connexion…" : "Se connecter"}
+                </Button>
                 <FieldDescription className="text-center">
                   Pas encore de compte ?{" "}
                   <Link

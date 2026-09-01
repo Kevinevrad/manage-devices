@@ -64,3 +64,14 @@ export function identifiantObligatoire(valeur: unknown): number {
   }
   return id;
 }
+
+/** Vérifie qu'une valeur est une adresse e-mail valide et la retourne. */
+export function emailObligatoire(valeur: unknown, champ: string): string {
+  const email = texteObligatoire(valeur, champ);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw ApiError.badRequest(
+      `Le champ « ${champ} » doit être un e-mail valide.`,
+    );
+  }
+  return email;
+}

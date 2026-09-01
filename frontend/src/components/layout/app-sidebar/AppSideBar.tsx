@@ -43,7 +43,7 @@ export const AppSideBar = ({ ...props }: AppSidebarProps) => {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter className="w-full border-t">
-        <DropDownNav user={props.user} />
+        <DropDownNav user={props.user} onDeconnexion={props.onDeconnexion} />
       </SidebarFooter>
     </Sidebar>
   );

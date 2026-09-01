@@ -1,7 +1,15 @@
 import { IconDeviceLaptop } from "@tabler/icons-react";
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+
+import { obtenirJetton } from "@/lib/api";
 
 export const Route = createFileRoute("/_layoutRegisterLogin")({
+  /** Utilisateur déjà connecté : inutile de revoir login/register. */
+  beforeLoad: () => {
+    if (obtenirJetton() !== null) {
+      throw redirect({ to: "/dashboard" });
+    }
+  },
   component: () => {
     return (
       <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-muted p-6 md:p-10 bg-[url('../assets/imgs/backgrounds/loginBg.svg')] bg-cover bg-center bg-no-repeat">

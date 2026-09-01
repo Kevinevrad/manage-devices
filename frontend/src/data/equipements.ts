@@ -15,9 +15,15 @@ import { formatEuros } from "@/lib/format";
  * À remplacer plus tard par les données de l'API.
  */
 
-export type EquipementStatut = "En service" | "En stock" | "En panne" | "Rebut";
+export type EquipementStatut =
+  | "Non Affecté"
+  | "En service"
+  | "En stock"
+  | "En panne"
+  | "Rebut";
 
 export const equipementStatuts: EquipementStatut[] = [
+  "Non Affecté",
   "En service",
   "En stock",
   "En panne",

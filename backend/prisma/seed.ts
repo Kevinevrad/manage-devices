@@ -1,4 +1,5 @@
 import { prisma } from "../src/config/prisma";
+import { hacherMotDePasse } from "../src/utils/auth";
 
 /**
  * Jeu de données initial aligné sur les données de démonstration du frontend
@@ -6,6 +7,9 @@ import { prisma } from "../src/config/prisma";
  * Réinitialise toutes les tables puis recrée un parc réaliste :
  * utilisateurs, équipements, affectations, licences et installations.
  */
+
+/** Mot de passe commun aux comptes de démonstration. */
+const MOT_DE_PASSE_DEMO = "Password123!";
 
 interface UtilisateurSeed {
   nom: string;
@@ -101,9 +105,14 @@ async function main() {
   await prisma.logiciel.deleteMany();
   await prisma.user.deleteMany();
 
-  // Utilisateurs
+  // Utilisateurs (mot de passe de démo haché par bcrypt)
   for (const utilisateur of utilisateursSeed) {
-    const cree = await prisma.user.create({ data: utilisateur });
+    const cree = await prisma.user.create({
+      data: {
+        ...utilisateur,
+        motDePasse: await hacherMotDePasse(MOT_DE_PASSE_DEMO),
+      },
+    });
     idsParNomComplet.set(`${cree.prenom} ${cree.nom}`, cree.id);
   }
 

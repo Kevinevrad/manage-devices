@@ -30,6 +30,7 @@ const typeIcons: Record<string, TablerIcon> = {
 
 /** Couleurs des badges de statut, calquées sur la charte des MetricsCard. */
 const statutStyles: Record<EquipementStatut, string> = {
+  "Non Affecté": "bg-muted text-muted-foreground",
   "En service": "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
   "En stock": "bg-sky-500/10 text-sky-700 dark:text-sky-400",
   "En panne": "bg-rose-500/10 text-rose-700 dark:text-rose-400",

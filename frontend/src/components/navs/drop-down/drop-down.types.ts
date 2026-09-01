@@ -8,4 +8,6 @@ export interface User {
 
 export type DropDown = React.ComponentProps<typeof DropdownMenu> & {
   user: User;
+  /** Action de déconnexion branchée sur le menu utilisateur. */
+  onDeconnexion?: () => void;
 };

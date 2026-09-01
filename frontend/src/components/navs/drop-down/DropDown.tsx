@@ -23,7 +23,13 @@ import {
   IconSparkles,
 } from "@tabler/icons-react";
 
-export function DropDownNav({ user }: { user: User }) {
+export function DropDownNav({
+  user,
+  onDeconnexion,
+}: {
+  user: User;
+  onDeconnexion?: () => void;
+}) {
   const { isMobile } = useSidebar();
 
   const initials =
@@ -101,7 +107,7 @@ export function DropDownNav({ user }: { user: User }) {
                 </DropdownMenuItem>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={onDeconnexion}>
                 <IconLogout />
                 Se déconnecter
               </DropdownMenuItem>

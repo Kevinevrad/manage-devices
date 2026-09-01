@@ -4,7 +4,8 @@ model User {
     nom       String
     prenom    String
     email     String  @unique
-    structure String 
+    motDePasse String // Hash bcrypt — jamais renvoyé par l'API
+    structure String
     service   String
     role      String  @default("user") // "user", "admin", "technicien"
 
