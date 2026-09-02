@@ -12,10 +12,20 @@ import {
 import { verifierEquipement } from "./equipement.service";
 import { verifierUtilisateur } from "./user.service";
 
-/** Include Prisma : équipement + utilisateur concernés. */
+/** Include Prisma : équipement concerné + utilisateur (sans le hash du mot de passe). */
 const includeComplet = {
   equipements: true,
-  user: true,
+  user: {
+    select: {
+      id: true,
+      nom: true,
+      prenom: true,
+      email: true,
+      structure: true,
+      service: true,
+      role: true,
+    },
+  },
 } satisfies Prisma.AffectationInclude;
 
 interface AffectationPayload {

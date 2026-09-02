@@ -145,7 +145,16 @@ async function verifierExistence(id: number) {
 /** Ajoute le nom complet calculé pour faciliter l'affichage côté frontend. */
 function versDto(user: UserComplet) {
   return {
-    ...user,
+    id: user.id,
+    nom: user.nom,
+    prenom: user.prenom,
+    email: user.email,
+    structure: user.structure,
+    service: user.service,
+    role: user.role,
     nomComplet: `${user.prenom} ${user.nom}`,
+    equipements: user.equipements,
+    historiquesAffectations: user.historiquesAffectations,
+    _count: user._count,
   };
 }
