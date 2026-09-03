@@ -1,5 +1,7 @@
 import { Prisma } from "../../prisma/generated/prisma/client";
 
+import { StatutEquipement } from "../domain/statuts";
+
 import { prisma } from "../config/prisma";
 import { ApiError } from "../utils/api-error";
 import { entierOuIndefini, premierTexte } from "../utils/query";
@@ -38,16 +40,22 @@ interface AffectationPayload {
 /**
  * Liste les affectations (historique complet).
  * Filtres : ?equipementId=… &userId=… &ouvertes=true (affectations en cours)
+ * &organisationId=… (héritée de l'équipement)
  */
 export async function listerAffectations(query: Record<string, unknown>) {
   const equipementId = entierOuIndefini(query.equipementId);
   const userId = entierOuIndefini(query.userId);
   const ouvertes = premierTexte(query.ouvertes) === "true";
+  const organisationId = entierOuIndefini(query.organisationId);
 
   const where: Prisma.AffectationWhereInput = {};
   if (equipementId !== undefined) where.equipementId = equipementId;
   if (userId !== undefined) where.userId = userId;
   if (ouvertes) where.dateFin = null;
+  if (organisationId !== undefined) {
+    // L'affectation hérite de l'organisation de son équipement
+    where.equipements = { organisationId };
+  }
 
   return prisma.affectation.findMany({
     where,
@@ -104,7 +112,7 @@ export async function creerAffectation(payload: AffectationPayload) {
   // L'équipement est rattaché à son nouvel utilisateur et passe « En service »
   await prisma.equipement.update({
     where: { id: equipementId },
-    data: { userId, statut: "En service" },
+    data: { userId, statut: StatutEquipement.EnService },
   });
 
   return affectation;
@@ -129,7 +137,7 @@ export async function cloturerAffectation(idParam: unknown) {
 
   await prisma.equipement.update({
     where: { id: affectation.equipementId },
-    data: { userId: null, statut: "En stock" },
+    data: { userId: null, statut: StatutEquipement.EnStock },
   });
 
   return maj;

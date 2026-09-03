@@ -1,3 +1,11 @@
+enum StatutEquipement {
+    Non_Affecte
+    En_service
+    En_stock
+    En_panne
+    Rebut
+}
+
 model Equipement {
 
     id  Int @id @default(autoincrement())
@@ -6,7 +14,7 @@ model Equipement {
     marque String
     prix Float  // Prix d'achat en euros
     numSerie String @unique
-    statut String   @default("Non Affecté") // "En service", "En stock", "En panne", "Rebut"
+    statut StatutEquipement @default(Non_Affecte) // Libellés API : "Non Affecté", "En service", "En stock", "En panne", "Rebut"
     dateAchat DateTime @default(now())
 
 
@@ -16,4 +24,7 @@ model Equipement {
 
     logiciels     LicencesSurEquipement[]
     historiquesAffectations Affectation[]
+
+    organisationId Int?
+    organisation   Organisation? @relation(fields: [organisationId], references: [id], onDelete: SetNull)
 }

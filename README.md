@@ -110,8 +110,11 @@ Chaque exécution part d'une base neuve (`prisma/test.db`, recréée par les mig
 ## État d'avancement
 
 - ✅ API CRUD complète (équipements, logiciels, utilisateurs, affectations) + authentification JWT
+- ✅ Multi-tenant : modèle Organisation (mono-schéma), rattachement/filtrage des entités, CRUD admin
+- ✅ Enums métier (statut équipement, rôle, type de licence) avec mapping libellés français ↔ valeurs stockées
 - ✅ Frontend branché sur l'API : dashboard, équipements, licences, affectations (états chargement/erreur)
 - ✅ Login / register fonctionnels, gardes de routes, déconnexion
-- ✅ Tests d'intégration backend (36 tests)
+- ✅ Tests d'intégration backend (55 tests)
 - ⬜ Formulaires de création/édition (mutations depuis l'UI)
 - ⬜ Export de données, rapports, graphiques du dashboard sur données réelles
+- ⬜ Isolation stricte par tenant (cloisonnement automatique des requêtes selon l'organisation de l'utilisateur connecté)

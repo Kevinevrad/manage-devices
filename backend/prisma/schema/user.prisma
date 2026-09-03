@@ -1,4 +1,10 @@
 
+enum Role {
+    user
+    admin
+    technicien
+}
+
 model User {
     id        Int     @id @default(autoincrement())
     nom       String
@@ -7,8 +13,11 @@ model User {
     motDePasse String // Hash bcrypt — jamais renvoyé par l'API
     structure String
     service   String
-    role      String  @default("user") // "user", "admin", "technicien"
+    role      Role    @default(user) // "user", "admin", "technicien"
 
     equipements Equipement[]
     historiquesAffectations Affectation[]
+
+    organisationId Int?
+    organisation   Organisation? @relation(fields: [organisationId], references: [id], onDelete: SetNull)
 }

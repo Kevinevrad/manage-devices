@@ -1,4 +1,11 @@
 import { prisma } from "../src/config/prisma";
+import type { RoleUtilisateur } from "../src/domain/statuts";
+import {
+  StatutEquipement,
+  TypeLicence,
+  statutEquipementDepuisLibelle,
+  typeLicenceDepuisLibelle,
+} from "../src/domain/statuts";
 import { hacherMotDePasse } from "../src/utils/auth";
 
 /**
@@ -17,7 +24,7 @@ interface UtilisateurSeed {
   email: string;
   structure: string;
   service: string;
-  role: string;
+  role: RoleUtilisateur;
 }
 
 const utilisateursSeed: UtilisateurSeed[] = [
@@ -104,6 +111,12 @@ async function main() {
   await prisma.equipement.deleteMany();
   await prisma.logiciel.deleteMany();
   await prisma.user.deleteMany();
+  await prisma.organisation.deleteMany();
+
+  // Organisation du parc de démonstration
+  const organisation = await prisma.organisation.create({
+    data: { nom: "Infratp" },
+  });
 
   // Utilisateurs (mot de passe de démo haché par bcrypt)
   for (const utilisateur of utilisateursSeed) {
@@ -111,6 +124,7 @@ async function main() {
       data: {
         ...utilisateur,
         motDePasse: await hacherMotDePasse(MOT_DE_PASSE_DEMO),
+        organisation: { connect: { id: organisation.id } },
       },
     });
     idsParNomComplet.set(`${cree.prenom} ${cree.nom}`, cree.id);
@@ -120,11 +134,14 @@ async function main() {
   const equipementsCrees: { id: number; statut: string }[] = [];
   let affectations = 0;
   for (const equipement of equipementsSeed) {
-    const { affecteA, dateAchat, ...donnees } = equipement;
+    const { affecteA, dateAchat, statut, ...donnees } = equipement;
     const cree = await prisma.equipement.create({
       data: {
         ...donnees,
+        // Libellé français du seed → valeur d'enum stockée en base
+        statut: statutEquipementDepuisLibelle(statut) ?? StatutEquipement.NonAffecte,
         dateAchat: new Date(dateAchat),
+        organisation: { connect: { id: organisation.id } },
         ...(affecteA
           ? { utilisateur: { connect: { id: idUtilisateur(affecteA) } } }
           : {}),
@@ -148,10 +165,13 @@ async function main() {
   // Logiciels (licences)
   const logicielsCrees: { id: number }[] = [];
   for (const logiciel of logicielsSeed) {
-    const { siegesUtilises, dateExp, ...donnees } = logiciel;
+    const { siegesUtilises, dateExp, typeLicence, ...donnees } = logiciel;
     const cree = await prisma.logiciel.create({
       data: {
         ...donnees,
+        // Libellé français du seed → valeur d'enum stockée en base
+        typeLicence: typeLicenceDepuisLibelle(typeLicence) ?? TypeLicence.Abonnement,
+        organisation: { connect: { id: organisation.id } },
         ...(dateExp !== null ? { dateExp: new Date(dateExp) } : {}),
       },
     });
@@ -161,7 +181,7 @@ async function main() {
   // Installations : chaque licence occupe ses sièges sur les équipements
   // « En service » (dans l'ordre du parc), dans la limite des sièges couverts
   const enService = equipementsCrees.filter(
-    (equipement) => equipement.statut === "En service",
+    (equipement) => equipement.statut === StatutEquipement.EnService,
   );
   let installations = 0;
   for (const [index, logiciel] of logicielsCrees.entries()) {
@@ -185,7 +205,7 @@ async function main() {
   }
 
   console.log(
-    `Seed terminé : ${utilisateursSeed.length} utilisateurs, ${equipementsSeed.length} équipements, ${affectations} affectations, ${logicielsSeed.length} licences, ${installations} installations.`,
+    `Seed terminé : 1 organisation (${organisation.nom}), ${utilisateursSeed.length} utilisateurs, ${equipementsSeed.length} équipements, ${affectations} affectations, ${logicielsSeed.length} licences, ${installations} installations.`,
   );
 }
 

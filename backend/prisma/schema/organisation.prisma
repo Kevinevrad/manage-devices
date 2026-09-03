@@ -1,5 +1,8 @@
 model Organisation {
     id  Int @id @default(autoincrement())
-    nom String 
-    
+    nom String @unique
+
+    users       User[]
+    equipements Equipement[]
+    logiciels   Logiciel[]
 }

@@ -4,8 +4,8 @@ import * as userService from "../services/user.service";
 import { identifiantObligatoire } from "../utils/validation";
 
 /** GET /api/users */
-export async function lister(_req: Request, res: Response): Promise<void> {
-  const users = await userService.listerUsers();
+export async function lister(req: Request, res: Response): Promise<void> {
+  const users = await userService.listerUsers(req.query);
   res.json(users);
 }
 

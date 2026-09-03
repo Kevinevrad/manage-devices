@@ -44,6 +44,7 @@ Toute erreur renvoie un objet `error` (et parfois `code` pour les erreurs Prisma
 | Authentification | `POST /auth/inscrire`, `POST /auth/connecter`, `GET /auth/moi` |
 | Équipements | CRUD + gestion des licences installées |
 | Licences | CRUD |
+| Organisations | CRUD (écriture réservée aux admins) |
 | Utilisateurs | CRUD |
 | Affectations | historique + retour matériel |
 
@@ -107,6 +108,8 @@ Profil de l'utilisateur porteur du jeton (objet `utilisateur` seul). Erreur : `4
 
 Champs : `id`, `nom`, `type`, `marque`, `prix` (€), `numSerie` (**unique**), `statut` (`Non Affecté` · `En service` · `En stock` · `En panne` · `Rebut`, défaut `Non Affecté`), `dateAchat`, `userId`.
 
+> 💡 **Enums** : `statut`, `role` et `typeLicence` sont des **enums Prisma**. En base, les valeurs sont stockées sous forme d'identifiants ASCII (`Non_Affecte`, `En_service`, `En_stock`, `En_panne`, `Rebut`) car les identifiants d'enum n'autorisent ni espaces ni accents ; l'API conserve le **contrat en libellés français** (entrée et sortie) via la couche de mapping `backend/src/domain/statuts.ts`.
+
 Le DTO ajoute :
 
 - `affecteA` — « Prénom Nom » de l'utilisateur courant, ou `null` ;
@@ -115,7 +118,7 @@ Le DTO ajoute :
 
 #### GET /equipements — 200
 
-Filtres combinables : `?statut=En service` · `?categorie=Ordinateur portable` (alias `?type=`) · `?q=texte` (recherche insensible sur `nom`, `marque`, `numSerie`). Tri par `id` croissant.
+Filtres combinables : `?statut=En service` · `?categorie=Ordinateur portable` (alias `?type=`) · `?q=texte` (recherche insensible sur `nom`, `marque`, `numSerie`) · `?organisationId=`. Tri par `id` croissant.
 
 #### GET /equipements/:id — 200 · `404` si inconnu
 
@@ -150,7 +153,7 @@ Supprime l'équipement, ses installations de licences et son historique d'affect
 
 ### Licences (logiciels)
 
-Champs : `id`, `nom`, `editeur`, `cleLicence` (**unique**), `typeLicence` (`Abonnement` · `Perpétuelle`), `siegesTotal` (nombre de postes couverts), `coutAnnuel` (€), `dateAchat`, `dateExp` (`null` pour une licence perpétuelle).
+Champs : `id`, `nom`, `editeur`, `cleLicence` (**unique**), `typeLicence` (`Abonnement` · `Perpétuelle` — enum stockée `Abonnement` / `Perpetuelle`), `siegesTotal` (nombre de postes couverts), `coutAnnuel` (€), `dateAchat`, `dateExp` (`null` pour une licence perpétuelle).
 
 Le DTO est aligné sur le type `Licence` du frontend :
 
@@ -171,7 +174,7 @@ Le DTO est aligné sur le type `Licence` du frontend :
 
 #### GET /logiciels — 200
 
-Filtres combinables : `?type=Abonnement` · `?q=texte` (sur `nom`, `editeur`, `cleLicence`) · `?expireSous=30` (licences expirant dans les 30 prochains jours).
+Filtres combinables : `?type=Abonnement` · `?q=texte` (sur `nom`, `editeur`, `cleLicence`) · `?expireSous=30` (licences expirant dans les 30 prochains jours) · `?organisationId=`.
 
 #### GET /logiciels/:id — 200 · `404` si inconnu
 
@@ -204,6 +207,8 @@ Champs du DTO : `id`, `nom`, `prenom`, `email` (**unique**), `structure`, `servi
 
 #### GET /users — 200 · liste triée par `id` croissant
 
+Filtre disponible : `?organisationId=`.
+
 #### GET /users/:id — 200 · `404` si inconnu
 
 #### POST /users — 201
@@ -224,7 +229,7 @@ Historique équipement ↔ utilisateur. Champs : `id`, `equipementId`, `userId`,
 
 #### GET /affectations — 200
 
-Filtres combinables : `?equipementId=` · `?userId=` · `?ouvertes=true` (affectations en cours uniquement). Tri par `dateDebut` décroissant.
+Filtres combinables : `?equipementId=` · `?userId=` · `?ouvertes=true` (affectations en cours uniquement) · `?organisationId=` (héritée de l'équipement). Tri par `dateDebut` décroissant.
 
 #### POST /affectations — 201
 
@@ -243,6 +248,38 @@ Erreurs : `404` (équipement ou utilisateur inconnu).
 #### PATCH /affectations/:id/retour — 200
 
 Clôture l'affectation (retour du matériel) : `dateFin` renseignée, équipement détaché de l'utilisateur et repassé « En stock ». Erreur : `400` si déjà clôturée.
+
+### Organisations
+
+Modèle multi-tenant (**mono-schéma**) : utilisateurs, équipements et licences peuvent être rattachés à une organisation via `organisationId` (nullable — une entité sans organisation reste visible). La suppression d'une organisation **détache** ses entités (`ON DELETE SET NULL`) sans les supprimer.
+
+DTO :
+
+```json
+{
+  "id": 1,
+  "nom": "Infratp",
+  "utilisateurs": 5,
+  "equipements": 14,
+  "logiciels": 12
+}
+```
+
+| Méthode | Route | Auth | Description |
+|---|---|---|---|
+| GET | `/organisations` | oui | Liste avec volumétries |
+| GET | `/organisations/:id` | oui | Détail · `404` sinon |
+| POST | `/organisations` | **admin** | Création — corps `{ "nom": "Infratp" }` → `201` |
+| PUT | `/organisations/:id` | **admin** | Renommage partiel → `200` |
+| DELETE | `/organisations/:id` | **admin** | Suppression → `204` (entités détachées) |
+
+Erreurs : `400` (nom manquant), `403` (non-admin), `404`, `409` (nom déjà pris).
+
+**Rattachement** : `organisationId` est accepté à la création et à la mise à jour des utilisateurs, équipements et licences (`null` en mise à jour = détacher) ; un `organisationId` inconnu renvoie `404`. Le DTO des utilisateurs, équipements et licences inclut l'objet `organisation : { id, nom }` ou `null`.
+
+**Filtrage** : les listes de chaque ressource acceptent le filtre `?organisationId=` (les affectations filtrent via l'organisation de leur équipement).
+
+> Note : le cloisonnement automatique par organisation de l'utilisateur connecté (isolation stricte par tenant) est une évolution prévue — pour l'instant le filtrage est explicitement demandé par le client.
 
 ---
 

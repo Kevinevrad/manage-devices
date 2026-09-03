@@ -1,6 +1,12 @@
 import { Prisma } from "../../prisma/generated/prisma/client";
 
 import { prisma } from "../config/prisma";
+import {
+  StatutEquipement,
+  libelleDepuisStatutEquipement,
+  libellesStatutEquipement,
+  statutEquipementDepuisLibelle,
+} from "../domain/statuts";
 import { ApiError } from "../utils/api-error";
 import { entierOuIndefini, premierTexte } from "../utils/query";
 import {
@@ -9,19 +15,15 @@ import {
   nombreObligatoire,
   texteObligatoire,
 } from "../utils/validation";
+import {
+  relationOrganisation,
+  relationOrganisationCreation,
+} from "./organisation.service";
 import { verifierUtilisateur } from "./user.service";
-
-/** Statuts autorisés pour un équipement. */
-const STATUTS = [
-  "Non Affecté",
-  "En service",
-  "En stock",
-  "En panne",
-  "Rebut",
-] as const;
 
 /** Include Prisma : utilisateur courant + licences installées. */
 const includeComplet = {
+  organisation: { select: { id: true, nom: true } },
   utilisateur: { select: { id: true, nom: true, prenom: true } },
   logiciels: { include: { logiciel: true } },
 } satisfies Prisma.EquipementInclude;
@@ -39,6 +41,7 @@ interface EquipementPayload {
   statut?: unknown;
   dateAchat?: unknown;
   userId?: unknown;
+  organisationId?: unknown;
 }
 
 /** Vérifie qu'un équipement existe (404 sinon). */
@@ -53,15 +56,27 @@ export async function verifierEquipement(id: number) {
 /**
  * Liste les équipements.
  * Filtres : ?statut=… &categorie=… (ou &type=…) &q=… (nom, marque, n° de série)
+ * &organisationId=…
  */
 export async function listerEquipements(query: Record<string, unknown>) {
-  const statut = premierTexte(query.statut);
+  const statutLabel = premierTexte(query.statut);
+  const statutFiltre =
+    statutLabel === undefined
+      ? undefined
+      : statutEquipementDepuisLibelle(statutLabel);
+  if (statutLabel !== undefined && statutFiltre === undefined) {
+    throw ApiError.badRequest(
+      `Le filtre « statut » doit être l'une des valeurs : ${libellesStatutEquipement().join(", ")}.`,
+    );
+  }
   const categorie = premierTexte(query.categorie) ?? premierTexte(query.type);
   const recherche = premierTexte(query.q);
+  const organisationId = entierOuIndefini(query.organisationId);
 
   const where: Prisma.EquipementWhereInput = {};
-  if (statut !== undefined) where.statut = statut;
+  if (statutFiltre !== undefined) where.statut = statutFiltre;
   if (categorie !== undefined) where.type = categorie;
+  if (organisationId !== undefined) where.organisationId = organisationId;
   if (recherche !== undefined) {
     where.OR = [
       { nom: { contains: recherche } },
@@ -111,8 +126,14 @@ export async function creerEquipement(payload: EquipementPayload) {
     const userId = entierObligatoire(payload.userId, "userId");
     await verifierUtilisateur(userId);
     data.utilisateur = { connect: { id: userId } };
-    if (statut === undefined) data.statut = "En service";
+    if (statut === undefined) data.statut = StatutEquipement.EnService;
   }
+
+  // Rattachement optionnel à une organisation (404 si inconnue)
+  const organisation = await relationOrganisationCreation(
+    payload.organisationId,
+  );
+  if (organisation !== undefined) data.organisation = organisation;
 
   const equipement = await prisma.equipement.create({
     data,
@@ -211,13 +232,14 @@ export async function desinstallerLogiciel(id: number, logicielId: number) {
 
 // ---------------------------------------------------------------- Utilitaires
 
-/** Valide le statut s'il est fourni. */
-function statutOptionnel(valeur: unknown): string | undefined {
+/** Valide le statut s'il est fourni (libellé français → valeur d'enum). */
+function statutOptionnel(valeur: unknown): StatutEquipement | undefined {
   if (valeur === undefined || valeur === null) return undefined;
-  const statut = texteObligatoire(valeur, "statut");
-  if (!(STATUTS as readonly string[]).includes(statut)) {
+  const label = texteObligatoire(valeur, "statut");
+  const statut = statutEquipementDepuisLibelle(label);
+  if (statut === undefined) {
     throw ApiError.badRequest(
-      `Le champ « statut » doit être l'une des valeurs : ${STATUTS.join(", ")}.`,
+      `Le champ « statut » doit être l'une des valeurs : ${libellesStatutEquipement().join(", ")}.`,
     );
   }
   return statut;
@@ -254,14 +276,18 @@ async function validerMiseAJour(
     if (payload.userId === null) {
       data.utilisateur = { disconnect: true };
       // Un équipement désaffecté repasse « En stock » (sauf statut explicite)
-      if (payload.statut === undefined) data.statut = "En stock";
+      if (payload.statut === undefined) data.statut = StatutEquipement.EnStock;
     } else {
       const userId = entierObligatoire(payload.userId, "userId");
       await verifierUtilisateur(userId);
       data.utilisateur = { connect: { id: userId } };
-      if (payload.statut === undefined) data.statut = "En service";
+      if (payload.statut === undefined) data.statut = StatutEquipement.EnService;
     }
   }
+
+  // Ré-rattachement ou détachement (organisationId: null) d'organisation
+  const organisation = await relationOrganisation(payload.organisationId);
+  if (organisation !== undefined) data.organisation = organisation;
 
   return data;
 }
@@ -270,6 +296,8 @@ async function validerMiseAJour(
 function versDto(equipement: EquipementComplet) {
   return {
     ...equipement,
+    // Statut stocké en enum (ex: En_service) — libellé français en sortie
+    statut: libelleDepuisStatutEquipement(equipement.statut),
     affecteA: equipement.utilisateur
       ? `${equipement.utilisateur.prenom} ${equipement.utilisateur.nom}`
       : null,

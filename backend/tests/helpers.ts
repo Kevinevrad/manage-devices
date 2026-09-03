@@ -5,6 +5,7 @@
  */
 
 import { prisma } from "../src/config/prisma";
+import type { RoleUtilisateur } from "../src/domain/statuts";
 import { hacherMotDePasse, signerJetton } from "../src/utils/auth";
 
 /** Mot de passe commun aux comptes de test. */
@@ -17,10 +18,11 @@ export async function viderTables(): Promise<void> {
   await prisma.equipement.deleteMany();
   await prisma.logiciel.deleteMany();
   await prisma.user.deleteMany();
+  await prisma.organisation.deleteMany();
 }
 
 interface OptionsUtilisateur {
-  role?: string;
+  role?: RoleUtilisateur;
   email?: string;
 }
 

@@ -1,20 +1,28 @@
 import { Prisma } from "../../prisma/generated/prisma/client";
 
 import { prisma } from "../config/prisma";
+import {
+  TypeLicence,
+  libelleDepuisTypeLicence,
+  libellesTypeLicence,
+  typeLicenceDepuisLibelle,
+} from "../domain/statuts";
 import { ApiError } from "../utils/api-error";
-import { premierTexte } from "../utils/query";
+import { entierOuIndefini, premierTexte } from "../utils/query";
 import {
   dateOptionnelle,
   entierObligatoire,
   nombreObligatoire,
   texteObligatoire,
 } from "../utils/validation";
-
-/** Types de licence autorisés (alignés sur le frontend). */
-const TYPES_LICENCE = ["Abonnement", "Perpétuelle"] as const;
+import {
+  relationOrganisation,
+  relationOrganisationCreation,
+} from "./organisation.service";
 
 /** Include Prisma : nombre d'installations (= sièges utilisés). */
 const includeComplet = {
+  organisation: { select: { id: true, nom: true } },
   _count: { select: { affectations: true } },
 } satisfies Prisma.LogicielInclude;
 
@@ -31,6 +39,7 @@ interface LogicielPayload {
   coutAnnuel?: unknown;
   dateAchat?: unknown;
   dateExp?: unknown;
+  organisationId?: unknown;
 }
 
 /** Vérifie qu'un logiciel existe (404 sinon). */
@@ -45,14 +54,24 @@ export async function verifierLogiciel(id: number) {
 /**
  * Liste les logiciels (licences).
  * Filtres : ?type=… (Abonnement / Perpétuelle) &q=… &expireSous=… (jours)
+ * &organisationId=…
  */
 export async function listerLogiciels(query: Record<string, unknown>) {
-  const type = premierTexte(query.type);
+  const typeLabel = premierTexte(query.type);
+  const typeFiltre =
+    typeLabel === undefined ? undefined : typeLicenceDepuisLibelle(typeLabel);
+  if (typeLabel !== undefined && typeFiltre === undefined) {
+    throw ApiError.badRequest(
+      `Le filtre « type » doit être l'une des valeurs : ${libellesTypeLicence().join(", ")}.`,
+    );
+  }
   const recherche = premierTexte(query.q);
   const expireSous = premierTexte(query.expireSous);
+  const organisationId = entierOuIndefini(query.organisationId);
 
   const where: Prisma.LogicielWhereInput = {};
-  if (type !== undefined) where.typeLicence = type;
+  if (typeFiltre !== undefined) where.typeLicence = typeFiltre;
+  if (organisationId !== undefined) where.organisationId = organisationId;
   if (recherche !== undefined) {
     where.OR = [
       { nom: { contains: recherche } },
@@ -105,7 +124,7 @@ export async function obtenirLogiciel(id: number) {
 
 /** Crée un logiciel (la clé de licence doit être unique — 409 sinon). */
 export async function creerLogiciel(payload: LogicielPayload) {
-  const data = validerCreation(payload);
+  const data = await validerCreation(payload);
   const logiciel = await prisma.logiciel.create({
     data,
     include: includeComplet,
@@ -148,6 +167,10 @@ export async function modifierLogiciel(id: number, payload: LogicielPayload) {
     data.dateExp = dateOptionnelle(payload.dateExp, "dateExp") ?? null;
   }
 
+  // Ré-rattachement ou détachement (organisationId: null) d'organisation
+  const organisation = await relationOrganisation(payload.organisationId);
+  if (organisation !== undefined) data.organisation = organisation;
+
   const logiciel = await prisma.logiciel.update({
     where: { id },
     data,
@@ -164,13 +187,14 @@ export async function supprimerLogiciel(id: number) {
 
 // ---------------------------------------------------------------- Utilitaires
 
-/** Valide le type de licence s'il est fourni. */
-function typeOptionnel(valeur: unknown): string | undefined {
+/** Valide le type de licence s'il est fourni (libellé → valeur d'enum). */
+function typeOptionnel(valeur: unknown): TypeLicence | undefined {
   if (valeur === undefined || valeur === null) return undefined;
-  const type = texteObligatoire(valeur, "typeLicence");
-  if (!(TYPES_LICENCE as readonly string[]).includes(type)) {
+  const label = texteObligatoire(valeur, "typeLicence");
+  const type = typeLicenceDepuisLibelle(label);
+  if (type === undefined) {
     throw ApiError.badRequest(
-      `Le champ « typeLicence » doit être l'une des valeurs : ${TYPES_LICENCE.join(", ")}.`,
+      `Le champ « typeLicence » doit être l'une des valeurs : ${libellesTypeLicence().join(", ")}.`,
     );
   }
   return type;
@@ -185,7 +209,9 @@ function validerCoutAnnuel(valeur: unknown): number {
   return cout;
 }
 
-function validerCreation(payload: LogicielPayload): Prisma.LogicielCreateInput {
+async function validerCreation(
+  payload: LogicielPayload,
+): Promise<Prisma.LogicielCreateInput> {
   const data: Prisma.LogicielCreateInput = {
     nom: texteObligatoire(payload.nom, "nom"),
     editeur: texteObligatoire(payload.editeur, "editeur"),
@@ -208,6 +234,12 @@ function validerCreation(payload: LogicielPayload): Prisma.LogicielCreateInput {
   const dateExp = dateOptionnelle(payload.dateExp, "dateExp");
   if (dateExp !== undefined) data.dateExp = dateExp;
 
+  // Rattachement optionnel à une organisation (404 si inconnue)
+  const organisation = await relationOrganisationCreation(
+    payload.organisationId,
+  );
+  if (organisation !== undefined) data.organisation = organisation;
+
   return data;
 }
 
@@ -221,7 +253,8 @@ function versDto(logiciel: LogicielComplet) {
     logiciel: logiciel.nom,
     editeur: logiciel.editeur,
     cle: logiciel.cleLicence,
-    type: logiciel.typeLicence,
+    // Type stocké en enum (ex: Perpetuelle) — libellé français en sortie
+    type: libelleDepuisTypeLicence(logiciel.typeLicence),
     siegesTotal: logiciel.siegesTotal,
     siegesUtilises: logiciel._count.affectations,
     dateAchat: logiciel.dateAchat,

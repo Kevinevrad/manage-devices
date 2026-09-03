@@ -1,15 +1,19 @@
 import { Prisma } from "../../prisma/generated/prisma/client";
 
 import { prisma } from "../config/prisma";
+import {
+  ROLES_UTILISATEUR,
+  type RoleUtilisateur,
+} from "../domain/statuts";
 import { ApiError } from "../utils/api-error";
 import { hacherMotDePasse, motDePasseValide } from "../utils/auth";
+import { entierOuIndefini } from "../utils/query";
 import { emailObligatoire, texteObligatoire } from "../utils/validation";
-
-/** Rôles autorisés pour un utilisateur. */
-const ROLES = ["user", "admin", "technicien"] as const;
+import { relationOrganisation, relationOrganisationCreation } from "./organisation.service";
 
 /** Include Prisma : équipements rattachés + historique d'affectations. */
 const includeComplet = {
+  organisation: { select: { id: true, nom: true } },
   equipements: true,
   historiquesAffectations: true,
   _count: { select: { equipements: true, historiquesAffectations: true } },
@@ -25,6 +29,7 @@ interface UserPayload {
   structure?: unknown;
   service?: unknown;
   role?: unknown;
+  organisationId?: unknown;
 }
 
 /**
@@ -45,20 +50,26 @@ function validerEmail(valeur: unknown, champ: string): string {
 }
 
 /** Valide le rôle s'il est fourni. */
-function roleOptionnel(valeur: unknown): string | undefined {
+function roleOptionnel(valeur: unknown): RoleUtilisateur | undefined {
   if (valeur === undefined || valeur === null) return undefined;
   const role = texteObligatoire(valeur, "role");
-  if (!(ROLES as readonly string[]).includes(role)) {
+  if (!(ROLES_UTILISATEUR as readonly string[]).includes(role)) {
     throw ApiError.badRequest(
-      `Le champ « role » doit être l'une des valeurs : ${ROLES.join(", ")}.`,
+      `Le champ « role » doit être l'une des valeurs : ${ROLES_UTILISATEUR.join(", ")}.`,
     );
   }
-  return role;
+  return role as RoleUtilisateur;
 }
 
-/** Liste les utilisateurs avec le nombre d'équipements rattachés. */
-export async function listerUsers() {
+/** Liste les utilisateurs (filtre : ?organisationId=…). */
+export async function listerUsers(query: Record<string, unknown>) {
+  const organisationId = entierOuIndefini(query.organisationId);
+
+  const where: Prisma.UserWhereInput = {};
+  if (organisationId !== undefined) where.organisationId = organisationId;
+
   const users = await prisma.user.findMany({
+    where,
     include: includeComplet,
     orderBy: { id: "asc" },
   });
@@ -91,6 +102,12 @@ export async function creerUser(payload: UserPayload) {
   const role = roleOptionnel(payload.role);
   if (role !== undefined) data.role = role;
 
+  // Rattachement optionnel à une organisation (404 si inconnue)
+  const organisation = await relationOrganisationCreation(
+    payload.organisationId,
+  );
+  if (organisation !== undefined) data.organisation = organisation;
+
   const user = await prisma.user.create({ data, include: includeComplet });
   return versDto(user);
 }
@@ -115,6 +132,10 @@ export async function modifierUser(id: number, payload: UserPayload) {
   }
   const role = roleOptionnel(payload.role);
   if (role !== undefined) data.role = role;
+
+  // Ré-rattachement ou détachement (organisationId: null) d'organisation
+  const organisation = await relationOrganisation(payload.organisationId);
+  if (organisation !== undefined) data.organisation = organisation;
 
   const user = await prisma.user.update({
     where: { id },
@@ -153,6 +174,7 @@ function versDto(user: UserComplet) {
     service: user.service,
     role: user.role,
     nomComplet: `${user.prenom} ${user.nom}`,
+    organisation: user.organisation,
     equipements: user.equipements,
     historiquesAffectations: user.historiquesAffectations,
     _count: user._count,

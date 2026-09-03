@@ -54,7 +54,8 @@ describe("POST /api/affectations", () => {
     const equipement = await prisma.equipement.findUnique({
       where: { id: equipementId },
     });
-    expect(equipement?.statut).toBe("En service");
+    // Valeur d'enum stockée en base (libellé « En service » exposé par l'API)
+    expect(equipement?.statut).toBe("En_service");
     expect(equipement?.userId).toBe(utilisateurId);
   });
 
@@ -98,7 +99,8 @@ describe("PATCH /api/affectations/:id/retour", () => {
     const equipement = await prisma.equipement.findUnique({
       where: { id: equipementId },
     });
-    expect(equipement?.statut).toBe("En stock");
+    // Valeur d'enum stockée en base (libellé « En stock » exposé par l'API)
+    expect(equipement?.statut).toBe("En_stock");
     expect(equipement?.userId).toBeNull();
   });
 

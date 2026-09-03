@@ -5,6 +5,7 @@ import { affectationRoutes } from "./affectation.routes";
 import { authRoutes } from "./auth.routes";
 import { equipementRoutes } from "./equipement.routes";
 import { logicielRoutes } from "./logiciel.routes";
+import { organisationRoutes } from "./organisation.routes";
 import { userRoutes } from "./user.routes";
 
 const apiRouter = Router();
@@ -22,6 +23,7 @@ apiRouter.use(exigerAuthentification);
 
 apiRouter.use("/equipements", equipementRoutes);
 apiRouter.use("/logiciels", logicielRoutes);
+apiRouter.use("/organisations", organisationRoutes);
 apiRouter.use("/users", userRoutes);
 apiRouter.use("/affectations", affectationRoutes);
 

@@ -1,3 +1,8 @@
+enum TypeLicence {
+    Abonnement
+    Perpetuelle
+}
+
 model Logiciel {
 
     id Int @id @default(autoincrement())
@@ -6,11 +11,14 @@ model Logiciel {
     cleLicence String @unique
     dateAchat DateTime @default(now())
     dateExp DateTime? // Null pour une licence perpétuelle
-    typeLicence String @default("Abonnement") // "Abonnement", "Perpétuelle"
+    typeLicence TypeLicence @default(Abonnement) // Libellés API : "Abonnement", "Perpétuelle"
     siegesTotal Int?    // Nombre de postes couverts par la licence
     coutAnnuel Float?   // Coût annuel en euros (null pour une licence perpétuelle)
     
     // Relation : Un logiciel peut être installé sur plusieurs équipements (et inversement)
     affectations LicencesSurEquipement[]
+
+    organisationId Int?
+    organisation   Organisation? @relation(fields: [organisationId], references: [id], onDelete: SetNull)
 
 }
