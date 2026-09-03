@@ -6,9 +6,14 @@
 
 import type {
   AffectationApi,
+  DonneesAffectation,
+  DonneesEquipement,
   DonneesInscription,
+  DonneesLicence,
+  DonneesModificationEquipement,
   EquipementApi,
   LicenceApi,
+  OrganisationApi,
   ReponseAuth,
   UtilisateurApi,
 } from "@/types/api";
@@ -123,9 +128,9 @@ export interface AffectationFiltres {
 }
 
 /**
- * Points d'entrée de l'API : authentification (public) + lectures métier
- * (protégées par le JWT, envoyé automatiquement via requete()).
- * Les mutations métier suivront avec les formulaires.
+ * Points d'entrée de l'API : authentification (public), lectures et
+ * mutations métier (protégées par le JWT, envoyé automatiquement via
+ * requete()).
  */
 export const api = {
   auth: {
@@ -152,6 +157,23 @@ export const api = {
         })}`,
       ),
     obtenir: (id: number) => requete<EquipementApi>(`/equipements/${id}`),
+    creer: (donnees: DonneesEquipement) =>
+      requete<EquipementApi>("/equipements", {
+        method: "POST",
+        body: JSON.stringify(donnees),
+      }),
+    modifier: (id: number, donnees: DonneesModificationEquipement) =>
+      requete<EquipementApi>(`/equipements/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(donnees),
+      }),
+    supprimer: (id: number) =>
+      requete<void>(`/equipements/${id}`, { method: "DELETE" }),
+    installerLicence: (equipementId: number, logicielId: number) =>
+      requete<EquipementApi>(`/equipements/${equipementId}/logiciels`, {
+        method: "POST",
+        body: JSON.stringify({ logicielId }),
+      }),
   },
   logiciels: {
     lister: (filtres: LogicielFiltres = {}) =>
@@ -163,6 +185,16 @@ export const api = {
         })}`,
       ),
     obtenir: (id: number) => requete<LicenceApi>(`/logiciels/${id}`),
+    creer: (donnees: DonneesLicence) =>
+      requete<LicenceApi>("/logiciels", {
+        method: "POST",
+        body: JSON.stringify(donnees),
+      }),
+    supprimer: (id: number) =>
+      requete<void>(`/logiciels/${id}`, { method: "DELETE" }),
+  },
+  organisations: {
+    lister: () => requete<OrganisationApi[]>("/organisations"),
   },
   utilisateurs: {
     lister: () => requete<UtilisateurApi[]>("/users"),
@@ -178,6 +210,15 @@ export const api = {
         })}`,
       ),
     obtenir: (id: number) => requete<AffectationApi>(`/affectations/${id}`),
+    creer: (donnees: DonneesAffectation) =>
+      requete<AffectationApi>("/affectations", {
+        method: "POST",
+        body: JSON.stringify(donnees),
+      }),
+    cloturer: (id: number) =>
+      requete<AffectationApi>(`/affectations/${id}/retour`, {
+        method: "PATCH",
+      }),
   },
 };
  

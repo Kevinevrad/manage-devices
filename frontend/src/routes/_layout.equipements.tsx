@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { IconDeviceDesktop, IconDownload, IconPlus } from "@tabler/icons-react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
@@ -6,6 +6,7 @@ import {
   Button,
   ChargementDonnees,
   ErreurDonnees,
+  FormulaireEquipement,
   Tabs,
   TabsList,
   TabsTrigger,
@@ -27,6 +28,7 @@ export const Route = createFileRoute("/_layout/equipements")({
 function EquipementsPage() {
   const { categorie } = Route.useSearch();
   const navigate = useNavigate();
+  const [formulaireOuvert, setFormulaireOuvert] = useState(false);
   const {
     data: equipements,
     isPending,
@@ -84,7 +86,7 @@ function EquipementsPage() {
             <IconDownload size={16} />
             Exporter
           </Button>
-          <Button>
+          <Button onClick={() => setFormulaireOuvert(true)}>
             <IconPlus size={16} />
             Ajouter un équipement
           </Button>
@@ -131,6 +133,11 @@ function EquipementsPage() {
       </div>
 
       <EquipementsTable data={equipements} categorie={categorieActive} />
+
+      <FormulaireEquipement
+        ouvert={formulaireOuvert}
+        onFermer={() => setFormulaireOuvert(false)}
+      />
     </div>
   );
 }

@@ -1,10 +1,4 @@
-import {
-  IconArrowBackUp,
-  IconCalendarPlus,
-  IconDotsVertical,
-  IconHistory,
-} from "@tabler/icons-react";
-import { toast } from "sonner";
+import { IconArrowBackUp, IconDotsVertical, IconHistory } from "@tabler/icons-react";
 
 import {
   Button,
@@ -14,9 +8,22 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components";
+import { useCloturerAffectation } from "@/hooks/api";
+
+interface AffectationsRowActionsProps {
+  /** Identifiant de l'affectation. */
+  id: number;
+  /** Date de retour — null tant que l'affectation est ouverte. */
+  dateRetour: string | null;
+}
 
 /** Menu d'actions d'une ligne affectation. */
-export function AffectationsRowActions({ equipement }: { equipement: string }) {
+export function AffectationsRowActions({
+  id,
+  dateRetour,
+}: AffectationsRowActionsProps) {
+  const { mutate, isPending } = useCloturerAffectation();
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger>
@@ -35,22 +42,21 @@ export function AffectationsRowActions({ equipement }: { equipement: string }) {
           Planifier un retour
         </DropdownMenuItem>
         <DropdownMenuItem>
-          <IconCalendarPlus />
-          Prolonger l'affectation
-        </DropdownMenuItem>
-        <DropdownMenuItem>
           <IconHistory />
           Voir l'historique
         </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          variant="destructive"
-          onClick={() =>
-            toast.info(`Restitution de « ${equipement} » à confirmer`)
-          }
-        >
-          Clôturer l'affectation
-        </DropdownMenuItem>
+        {dateRetour === null && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              variant="destructive"
+              disabled={isPending}
+              onClick={() => mutate(id)}
+            >
+              Clôturer l'affectation
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -141,7 +141,10 @@ export const affectationColumns: ColumnDef<Affectation>[] = [
     id: "actions",
     header: () => null,
     cell: ({ row }) => (
-      <AffectationsRowActions equipement={row.original.equipement} />
+      <AffectationsRowActions
+        id={row.original.id}
+        dateRetour={row.original.dateRetour}
+      />
     ),
   },
 ];

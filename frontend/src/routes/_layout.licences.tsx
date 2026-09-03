@@ -1,8 +1,13 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { IconDownload, IconLicense, IconPlus } from "@tabler/icons-react";
 import { createFileRoute } from "@tanstack/react-router";
 
-import { Button, ChargementDonnees, ErreurDonnees } from "@/components";
+import {
+  Button,
+  ChargementDonnees,
+  ErreurDonnees,
+  FormulaireLicence,
+} from "@/components";
 import { MetricsSection } from "@/components/sections/metrics";
 import { LicencesTable } from "@/components/tables";
 import { useLicences } from "@/hooks/api";
@@ -13,6 +18,7 @@ export const Route = createFileRoute("/_layout/licences")({
 });
 
 function LicencesPage() {
+  const [formulaireOuvert, setFormulaireOuvert] = useState(false);
   const {
     data: licences,
     isPending,
@@ -57,7 +63,7 @@ function LicencesPage() {
             <IconDownload size={16} />
             Exporter
           </Button>
-          <Button>
+          <Button onClick={() => setFormulaireOuvert(true)}>
             <IconPlus size={16} />
             Ajouter une licence
           </Button>
@@ -71,6 +77,11 @@ function LicencesPage() {
       />
 
       <LicencesTable data={licences} />
+
+      <FormulaireLicence
+        ouvert={formulaireOuvert}
+        onFermer={() => setFormulaireOuvert(false)}
+      />
     </div>
   );
 }

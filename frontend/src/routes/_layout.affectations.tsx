@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   IconClipboardList,
   IconDownload,
@@ -10,6 +10,7 @@ import {
   Button,
   ChargementDonnees,
   ErreurDonnees,
+  FormulaireAffectation,
   Tabs,
   TabsList,
   TabsTrigger,
@@ -30,6 +31,7 @@ export const Route = createFileRoute("/_layout/affectations")({
 function AffectationsPage() {
   const { service } = Route.useSearch();
   const navigate = useNavigate();
+  const [formulaireOuvert, setFormulaireOuvert] = useState(false);
   const {
     data: affectations,
     isPending,
@@ -87,7 +89,7 @@ function AffectationsPage() {
             <IconDownload size={16} />
             Exporter
           </Button>
-          <Button>
+          <Button onClick={() => setFormulaireOuvert(true)}>
             <IconPlus size={16} />
             Nouvelle affectation
           </Button>
@@ -138,6 +140,11 @@ function AffectationsPage() {
       </div>
 
       <AffectationsTable data={affectations} service={serviceActif} />
+
+      <FormulaireAffectation
+        ouvert={formulaireOuvert}
+        onFermer={() => setFormulaireOuvert(false)}
+      />
     </div>
   );
 }

@@ -126,3 +126,57 @@ export interface DonneesInscription {
   structure: string;
   service: string;
 }
+
+/** Organisation (DTO de GET /api/organisations). */
+export interface OrganisationApi {
+  id: number;
+  nom: string;
+  utilisateurs: number;
+  equipements: number;
+  logiciels: number;
+}
+
+/** Données de création d'un équipement. */
+export interface DonneesEquipement {
+  nom: string;
+  type: string;
+  marque: string;
+  prix: number;
+  numSerie: string;
+  statut?: string;
+  dateAchat?: string;
+  organisationId?: number;
+}
+
+/** Données de mise à jour d'un équipement (partielles — null = détacher). */
+export interface DonneesModificationEquipement {
+  nom?: string;
+  type?: string;
+  marque?: string;
+  prix?: number;
+  numSerie?: string;
+  statut?: string;
+  dateAchat?: string;
+  userId?: number | null;
+  organisationId?: number | null;
+}
+
+/** Données de création d'une licence. */
+export interface DonneesLicence {
+  nom: string;
+  editeur: string;
+  cleLicence: string;
+  typeLicence?: string;
+  siegesTotal?: number | null;
+  coutAnnuel?: number | null;
+  dateAchat?: string;
+  dateExp?: string | null;
+}
+
+/** Données de création d'une affectation. */
+export interface DonneesAffectation {
+  equipementId: number;
+  userId: number;
+  commentaire?: string;
+  dateDebut?: string;
+}
