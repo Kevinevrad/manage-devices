@@ -1,5 +1,4 @@
-import { IconDotsVertical } from "@tabler/icons-react";
-import { toast } from "sonner";
+import { IconDotsVertical, IconPencil, IconTrash } from "@tabler/icons-react";
 
 import {
   Button,
@@ -9,9 +8,23 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components";
+import type { Equipement } from "@/data/equipements";
+import { useSupprimerEquipement } from "@/hooks/api";
+
+interface EquipementsRowActionsProps {
+  /** Équipement de la ligne. */
+  equipement: Equipement;
+  /** Ouvre le panneau d'édition (géré par la page). */
+  onModifier: (equipement: Equipement) => void;
+}
 
 /** Menu d'actions d'une ligne équipement. */
-export function EquipementsRowActions({ nom }: { nom: string }) {
+export function EquipementsRowActions({
+  equipement,
+  onModifier,
+}: EquipementsRowActionsProps) {
+  const { mutate, isPending } = useSupprimerEquipement();
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger>
@@ -25,14 +38,17 @@ export function EquipementsRowActions({ nom }: { nom: string }) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-44">
-        <DropdownMenuItem>Voir la fiche</DropdownMenuItem>
-        <DropdownMenuItem>Modifier</DropdownMenuItem>
-        <DropdownMenuItem>Dupliquer</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onModifier(equipement)}>
+          <IconPencil />
+          Modifier
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           variant="destructive"
-          onClick={() => toast.error(`Suppression de « ${nom} » à confirmer`)}
+          disabled={isPending}
+          onClick={() => mutate(equipement.id)}
         >
+          <IconTrash />
           Supprimer
         </DropdownMenuItem>
       </DropdownMenuContent>

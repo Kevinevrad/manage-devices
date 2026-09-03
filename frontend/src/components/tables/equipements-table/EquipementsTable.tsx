@@ -33,12 +33,13 @@ import {
 } from "@/components";
 import { equipementStatuts } from "@/data/equipements";
 
-import { equipementColumns } from "./equipements-columns";
+import { creerColonnesEquipements } from "./equipements-columns";
 import type { EquipementsTableProps } from "./equipements-table.types";
 
 export function EquipementsTable({
   data,
   categorie = "tous",
+  onModifier,
 }: EquipementsTableProps) {
   const [search, setSearch] = React.useState("");
   const [statut, setStatut] = React.useState("tous");
@@ -66,9 +67,14 @@ export function EquipementsTable({
     });
   }, [data, search, statut, categorie]);
 
+  const colonnes = React.useMemo(
+    () => creerColonnesEquipements({ onModifier: onModifier ?? (() => {}) }),
+    [onModifier],
+  );
+
   const table = useReactTable({
     data: filteredData,
-    columns: equipementColumns,
+    columns: colonnes,
     state: { sorting, pagination },
     onSortingChange: setSorting,
     onPaginationChange: setPagination,
@@ -155,7 +161,7 @@ export function EquipementsTable({
           ) : (
             <TableRow className="hover:bg-transparent">
               <TableCell
-                colSpan={equipementColumns.length}
+                colSpan={colonnes.length}
                 className="h-28 text-center text-muted-foreground"
               >
                 Aucun équipement ne correspond à votre recherche.

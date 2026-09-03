@@ -116,6 +116,6 @@ Chaque exécution part d'une base neuve (`prisma/test.db`, recréée par les mig
 - ✅ Login / register fonctionnels, gardes de routes, déconnexion
 - ✅ Tests d'intégration backend (55 tests)
 - ✅ Créations et mutations depuis l'UI : ajout d'équipement, ajout de licence, nouvelle affectation et retour du matériel (toasts + invalidation TanStack Query)
-- ⬜ Édition et suppression depuis l'UI (hooks de mutation déjà prêts)
+- ✅ Édition des équipements et suppression (équipements, licences) depuis les menus d'actions des tables
 - ⬜ Export de données, rapports, graphiques du dashboard sur données réelles
 - ⬜ Isolation stricte par tenant (cloisonnement automatique des requêtes selon l'organisation de l'utilisateur connecté)

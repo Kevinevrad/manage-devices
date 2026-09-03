@@ -5,4 +5,6 @@ export interface EquipementsTableProps {
   data: Equipement[];
   /** Catégorie active du sous-menu (« tous » = aucune restriction) */
   categorie?: string;
+  /** Ouvre le panneau d'édition pour l'équipement donné. */
+  onModifier?: (equipement: Equipement) => void;
 }

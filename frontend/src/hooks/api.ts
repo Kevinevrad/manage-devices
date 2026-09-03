@@ -20,6 +20,7 @@ import type {
   DonneesAffectation,
   DonneesEquipement,
   DonneesLicence,
+  DonneesModificationEquipement,
 } from "@/types/api";
 import { versAffectations, versEquipements, versLicences } from "@/lib/mappers";
 
@@ -156,5 +157,41 @@ export function useCreerLicence() {
     },
     onError: (error: unknown) =>
       toast.error(messageErreur(error, "Création de la licence impossible.")),
+  });
+}
+
+/** Modifie un équipement puis invalide les listes du parc. */
+export function useModifierEquipement() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      donnees,
+    }: {
+      id: number;
+      donnees: DonneesModificationEquipement;
+    }) => api.equipements.modifier(id, donnees),
+    onSuccess: (equipement) => {
+      invalider(queryClient, "equipements");
+      invalider(queryClient, "affectations");
+      toast.success(`Équipement « ${equipement.nom} » modifié.`);
+    },
+    onError: (error: unknown) =>
+      toast.error(messageErreur(error, "Modification impossible.")),
+  });
+}
+
+/** Supprime une licence puis invalide la liste des licences. */
+export function useSupprimerLicence() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.logiciels.supprimer(id),
+    onSuccess: () => {
+      invalider(queryClient, "licences");
+      invalider(queryClient, "equipements");
+      toast.success("Licence supprimée.");
+    },
+    onError: (error: unknown) =>
+      toast.error(messageErreur(error, "Suppression impossible.")),
   });
 }

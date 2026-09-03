@@ -37,7 +37,15 @@ const statutStyles: Record<EquipementStatut, string> = {
   Rebut: "bg-muted text-muted-foreground",
 };
 
-export const equipementColumns: ColumnDef<Equipement>[] = [
+interface OptionsColonnesEquipement {
+  /** Ouvre le panneau d'édition pour l'équipement donné. */
+  onModifier: (equipement: Equipement) => void;
+}
+
+/** Colonnes du tableau équipements (factory : branche les actions de ligne). */
+export const creerColonnesEquipements = (
+  options: OptionsColonnesEquipement,
+): ColumnDef<Equipement>[] => [
   {
     accessorKey: "nom",
     header: ({ column }) => (
@@ -136,6 +144,11 @@ export const equipementColumns: ColumnDef<Equipement>[] = [
   {
     id: "actions",
     header: () => null,
-    cell: ({ row }) => <EquipementsRowActions nom={row.original.nom} />,
+    cell: ({ row }) => (
+      <EquipementsRowActions
+        equipement={row.original}
+        onModifier={options.onModifier}
+      />
+    ),
   },
 ];

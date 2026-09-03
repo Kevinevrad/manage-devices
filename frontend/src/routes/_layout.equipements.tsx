@@ -11,6 +11,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components";
+import type { Equipement } from "@/data/equipements";
 import { MetricsSection } from "@/components/sections/metrics";
 import { EquipementsTable } from "@/components/tables";
 import { useEquipements } from "@/hooks/api";
@@ -29,6 +30,8 @@ function EquipementsPage() {
   const { categorie } = Route.useSearch();
   const navigate = useNavigate();
   const [formulaireOuvert, setFormulaireOuvert] = useState(false);
+  const [equipementEnEdition, setEquipementEnEdition] =
+    useState<Equipement | null>(null);
   const {
     data: equipements,
     isPending,
@@ -132,11 +135,19 @@ function EquipementsPage() {
         </Tabs>
       </div>
 
-      <EquipementsTable data={equipements} categorie={categorieActive} />
+      <EquipementsTable
+        data={equipements}
+        categorie={categorieActive}
+        onModifier={setEquipementEnEdition}
+      />
 
       <FormulaireEquipement
-        ouvert={formulaireOuvert}
-        onFermer={() => setFormulaireOuvert(false)}
+        ouvert={formulaireOuvert || equipementEnEdition !== null}
+        equipementAEditer={equipementEnEdition}
+        onFermer={() => {
+          setFormulaireOuvert(false);
+          setEquipementEnEdition(null);
+        }}
       />
     </div>
   );

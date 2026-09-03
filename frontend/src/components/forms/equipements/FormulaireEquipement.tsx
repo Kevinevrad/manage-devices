@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { toast } from "sonner";
 
@@ -21,7 +21,8 @@ import {
   SheetTitle,
 } from "@/components";
 import { equipementStatuts } from "@/data/equipements";
-import { useCreerEquipement } from "@/hooks/api";
+import type { Equipement } from "@/data/equipements";
+import { useCreerEquipement, useModifierEquipement } from "@/hooks/api";
 
 /** Types d'équipement proposés à la création. */
 const TYPES_EQUIPEMENT = [
@@ -38,6 +39,8 @@ interface FormulaireEquipementProps {
   ouvert: boolean;
   /** Fermeture demandée (après succès ou annulation). */
   onFermer: () => void;
+  /** Équipement à modifier — absent/null pour une création. */
+  equipementAEditer?: Equipement | null;
 }
 
 const donneesInitiales = {
@@ -54,9 +57,32 @@ const donneesInitiales = {
 export function FormulaireEquipement({
   ouvert,
   onFermer,
+  equipementAEditer = null,
 }: FormulaireEquipementProps) {
-  const { mutateAsync, isPending } = useCreerEquipement();
+  const { mutateAsync: creer, isPending: creationEnCours } =
+    useCreerEquipement();
+  const { mutateAsync: modifierEquipement, isPending: modificationEnCours } =
+    useModifierEquipement();
   const [donnees, setDonnees] = useState(donneesInitiales);
+  const envoi = creationEnCours || modificationEnCours;
+
+  // Pré-remplissage : création vide ou édition de l'équipement fourni
+  useEffect(() => {
+    if (!ouvert) return;
+    setDonnees(
+      equipementAEditer
+        ? {
+            nom: equipementAEditer.nom,
+            type: equipementAEditer.type,
+            marque: equipementAEditer.marque,
+            prix: String(equipementAEditer.prix),
+            numSerie: equipementAEditer.numSerie,
+            statut: equipementAEditer.statut,
+            dateAchat: equipementAEditer.dateAchat,
+          }
+        : donneesInitiales,
+    );
+  }, [ouvert, equipementAEditer]);
 
   const modifier =
     (champ: keyof typeof donneesInitiales) =>
@@ -74,17 +100,34 @@ export function FormulaireEquipement({
       return;
     }
     try {
-      await mutateAsync({
-        nom: donnees.nom,
-        type: donnees.type,
-        marque: donnees.marque,
-        prix,
-        numSerie: donnees.numSerie,
-        ...(donnees.statut !== "Non Affecté"
-          ? { statut: donnees.statut }
-          : {}),
-        ...(donnees.dateAchat !== "" ? { dateAchat: donnees.dateAchat } : {}),
-      });
+      if (equipementAEditer) {
+        await modifierEquipement({
+          id: equipementAEditer.id,
+          donnees: {
+            nom: donnees.nom,
+            type: donnees.type,
+            marque: donnees.marque,
+            prix,
+            numSerie: donnees.numSerie,
+            statut: donnees.statut,
+            ...(donnees.dateAchat !== ""
+              ? { dateAchat: donnees.dateAchat }
+              : {}),
+          },
+        });
+      } else {
+        await creer({
+          nom: donnees.nom,
+          type: donnees.type,
+          marque: donnees.marque,
+          prix,
+          numSerie: donnees.numSerie,
+          ...(donnees.statut !== "Non Affecté"
+            ? { statut: donnees.statut }
+            : {}),
+          ...(donnees.dateAchat !== "" ? { dateAchat: donnees.dateAchat } : {}),
+        });
+      }
       setDonnees(donneesInitiales);
       onFermer();
     } catch {
@@ -101,7 +144,11 @@ export function FormulaireEquipement({
     >
       <SheetContent className="overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>Ajouter un équipement</SheetTitle>
+          <SheetTitle>
+            {equipementAEditer
+              ? "Modifier l'équipement"
+              : "Ajouter un équipement"}
+          </SheetTitle>
           <SheetDescription>
             Renseignez les caractéristiques du nouveau matériel du parc.
           </SheetDescription>
@@ -220,8 +267,12 @@ export function FormulaireEquipement({
             >
               Annuler
             </Button>
-            <Button type="submit" className="flex-1" disabled={isPending}>
-              {isPending ? "Création…" : "Créer"}
+            <Button type="submit" className="flex-1" disabled={envoi}>
+              {envoi
+                ? "Enregistrement…"
+                : equipementAEditer
+                  ? "Enregistrer"
+                  : "Créer"}
             </Button>
           </SheetFooter>
         </form>

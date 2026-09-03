@@ -145,6 +145,8 @@ export const licenceColumns: ColumnDef<Licence>[] = [
   {
     id: "actions",
     header: () => null,
-    cell: ({ row }) => <LicencesRowActions cle={row.original.cle} />,
+    cell: ({ row }) => (
+      <LicencesRowActions cle={row.original.cle} id={row.original.id} />
+    ),
   },
 ];
