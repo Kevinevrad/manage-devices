@@ -1,4 +1,5 @@
 import {
+  IconBuilding,
   IconChartBar,
   IconDeviceDesktop,
   IconLayoutDashboard,
@@ -37,8 +38,15 @@ export const navs = {
     },
     {
       title: "Utilisateurs",
-      url: "#",
+      url: "/users",
       icon: IconUsers,
+    },
+    {
+      title: "Organisations",
+      url: "/organisations",
+      icon: IconBuilding,
+      /** Réservé aux administrateurs (filtré côté UI). */
+      adminOnly: true,
     },
     {
       title: "Rapports",
@@ -47,17 +55,17 @@ export const navs = {
       items: [
         {
           title: "Inventaire",
-          url: "#",
+          url: "/rapports/inventaire",
         },
         {
           title: "Licences expirantes",
-          url: "#",
+          url: "/rapports/licences-expirantes",
         },
       ],
     },
     {
       title: "Paramètres",
-      url: "#",
+      url: "/parametres",
       icon: IconSettings2,
     },
   ],

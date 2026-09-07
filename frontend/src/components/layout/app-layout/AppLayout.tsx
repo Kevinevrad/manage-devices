@@ -26,6 +26,11 @@ const breadcrumbLabels: Record<string, string> = {
   "/equipements": "Équipements",
   "/licences": "Licences",
   "/affectations": "Affectations",
+  "/users": "Utilisateurs",
+  "/organisations": "Organisations",
+  "/rapports/inventaire": "Inventaire",
+  "/rapports/licences-expirantes": "Licences expirantes",
+  "/parametres": "Paramètres",
 };
 
 export const AppLayout = ({ children }: AppLayoutProps) => {
@@ -42,10 +47,15 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
     void navigate({ to: "/login" });
   };
 
+  /** Navigation filtrée selon le rôle (adminOnly réservé aux admins). */
+  const navMainFiltree = navs.navMain.filter(
+    (item) => !item.adminOnly || utilisateur?.role === "admin",
+  );
+
   return (
     <SidebarProvider>
       <AppSideBar
-        navMain={navs.navMain}
+        navMain={navMainFiltree}
         onDeconnexion={deconnecterEtRediriger}
         user={{
           name: utilisateur?.nomComplet ?? "…",

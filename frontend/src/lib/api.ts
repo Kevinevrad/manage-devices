@@ -187,6 +187,11 @@ export const api = {
         method: "POST",
         body: JSON.stringify({ logicielId }),
       }),
+    desinstallerLicence: (equipementId: number, logicielId: number) =>
+      requete<void>(
+        `/equipements/${equipementId}/logiciels/${logicielId}`,
+        { method: "DELETE" },
+      ),
   },
   logiciels: {
     lister: (filtres: LogicielFiltres = {}) =>
@@ -203,15 +208,63 @@ export const api = {
         method: "POST",
         body: JSON.stringify(donnees),
       }),
+    modifier: (id: number, donnees: Partial<DonneesLicence>) =>
+      requete<LicenceApi>(`/logiciels/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(donnees),
+      }),
     supprimer: (id: number) =>
       requete<void>(`/logiciels/${id}`, { method: "DELETE" }),
   },
   organisations: {
     lister: () => requete<OrganisationApi[]>("/organisations"),
+    obtenir: (id: number) => requete<OrganisationApi>(`/organisations/${id}`),
+    creer: (donnees: { nom: string }) =>
+      requete<OrganisationApi>("/organisations", {
+        method: "POST",
+        body: JSON.stringify(donnees),
+      }),
+    modifier: (id: number, donnees: { nom: string }) =>
+      requete<OrganisationApi>(`/organisations/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(donnees),
+      }),
+    supprimer: (id: number) =>
+      requete<void>(`/organisations/${id}`, { method: "DELETE" }),
   },
   utilisateurs: {
     lister: () => requete<UtilisateurApi[]>("/users"),
     obtenir: (id: number) => requete<UtilisateurApi>(`/users/${id}`),
+    creer: (donnees: {
+      nom: string;
+      prenom: string;
+      email: string;
+      motDePasse: string;
+      structure?: string;
+      service?: string;
+      role?: string;
+    }) =>
+      requete<UtilisateurApi>("/users", {
+        method: "POST",
+        body: JSON.stringify(donnees),
+      }),
+    modifier: (
+      id: number,
+      donnees: {
+        nom?: string;
+        prenom?: string;
+        email?: string;
+        structure?: string;
+        service?: string;
+        role?: string;
+      },
+    ) =>
+      requete<UtilisateurApi>(`/users/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(donnees),
+      }),
+    supprimer: (id: number) =>
+      requete<void>(`/users/${id}`, { method: "DELETE" }),
   },
   affectations: {
     lister: (filtres: AffectationFiltres = {}) =>

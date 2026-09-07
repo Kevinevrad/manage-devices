@@ -14,10 +14,15 @@ import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LayoutRegisterLoginRegisterRouteImport } from './routes/_layoutRegisterLogin.register'
 import { Route as LayoutRegisterLoginLoginRouteImport } from './routes/_layoutRegisterLogin.login'
+import { Route as LayoutUsersRouteImport } from './routes/_layout.users'
+import { Route as LayoutParametresRouteImport } from './routes/_layout.parametres'
+import { Route as LayoutOrganisationsRouteImport } from './routes/_layout.organisations'
 import { Route as LayoutLicencesRouteImport } from './routes/_layout.licences'
 import { Route as LayoutEquipementsRouteImport } from './routes/_layout.equipements'
 import { Route as LayoutDashboardRouteImport } from './routes/_layout.dashboard'
 import { Route as LayoutAffectationsRouteImport } from './routes/_layout.affectations'
+import { Route as LayoutRapportsLicencesExpirantesRouteImport } from './routes/_layout.rapports.licences-expirantes'
+import { Route as LayoutRapportsInventaireRouteImport } from './routes/_layout.rapports.inventaire'
 
 const LayoutRegisterLoginRoute = LayoutRegisterLoginRouteImport.update({
   id: '/_layoutRegisterLogin',
@@ -44,6 +49,21 @@ const LayoutRegisterLoginLoginRoute =
     path: '/login',
     getParentRoute: () => LayoutRegisterLoginRoute,
   } as any)
+const LayoutUsersRoute = LayoutUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutParametresRoute = LayoutParametresRouteImport.update({
+  id: '/parametres',
+  path: '/parametres',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutOrganisationsRoute = LayoutOrganisationsRouteImport.update({
+  id: '/organisations',
+  path: '/organisations',
+  getParentRoute: () => LayoutRoute,
+} as any)
 const LayoutLicencesRoute = LayoutLicencesRouteImport.update({
   id: '/licences',
   path: '/licences',
@@ -64,6 +84,18 @@ const LayoutAffectationsRoute = LayoutAffectationsRouteImport.update({
   path: '/affectations',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutRapportsLicencesExpirantesRoute =
+  LayoutRapportsLicencesExpirantesRouteImport.update({
+    id: '/rapports/licences-expirantes',
+    path: '/rapports/licences-expirantes',
+    getParentRoute: () => LayoutRoute,
+  } as any)
+const LayoutRapportsInventaireRoute =
+  LayoutRapportsInventaireRouteImport.update({
+    id: '/rapports/inventaire',
+    path: '/rapports/inventaire',
+    getParentRoute: () => LayoutRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -71,8 +103,13 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof LayoutDashboardRoute
   '/equipements': typeof LayoutEquipementsRoute
   '/licences': typeof LayoutLicencesRoute
+  '/organisations': typeof LayoutOrganisationsRoute
+  '/parametres': typeof LayoutParametresRoute
+  '/users': typeof LayoutUsersRoute
   '/login': typeof LayoutRegisterLoginLoginRoute
   '/register': typeof LayoutRegisterLoginRegisterRoute
+  '/rapports/inventaire': typeof LayoutRapportsInventaireRoute
+  '/rapports/licences-expirantes': typeof LayoutRapportsLicencesExpirantesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -80,8 +117,13 @@ export interface FileRoutesByTo {
   '/dashboard': typeof LayoutDashboardRoute
   '/equipements': typeof LayoutEquipementsRoute
   '/licences': typeof LayoutLicencesRoute
+  '/organisations': typeof LayoutOrganisationsRoute
+  '/parametres': typeof LayoutParametresRoute
+  '/users': typeof LayoutUsersRoute
   '/login': typeof LayoutRegisterLoginLoginRoute
   '/register': typeof LayoutRegisterLoginRegisterRoute
+  '/rapports/inventaire': typeof LayoutRapportsInventaireRoute
+  '/rapports/licences-expirantes': typeof LayoutRapportsLicencesExpirantesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -92,8 +134,13 @@ export interface FileRoutesById {
   '/_layout/dashboard': typeof LayoutDashboardRoute
   '/_layout/equipements': typeof LayoutEquipementsRoute
   '/_layout/licences': typeof LayoutLicencesRoute
+  '/_layout/organisations': typeof LayoutOrganisationsRoute
+  '/_layout/parametres': typeof LayoutParametresRoute
+  '/_layout/users': typeof LayoutUsersRoute
   '/_layoutRegisterLogin/login': typeof LayoutRegisterLoginLoginRoute
   '/_layoutRegisterLogin/register': typeof LayoutRegisterLoginRegisterRoute
+  '/_layout/rapports/inventaire': typeof LayoutRapportsInventaireRoute
+  '/_layout/rapports/licences-expirantes': typeof LayoutRapportsLicencesExpirantesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -103,8 +150,13 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/equipements'
     | '/licences'
+    | '/organisations'
+    | '/parametres'
+    | '/users'
     | '/login'
     | '/register'
+    | '/rapports/inventaire'
+    | '/rapports/licences-expirantes'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -112,8 +164,13 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/equipements'
     | '/licences'
+    | '/organisations'
+    | '/parametres'
+    | '/users'
     | '/login'
     | '/register'
+    | '/rapports/inventaire'
+    | '/rapports/licences-expirantes'
   id:
     | '__root__'
     | '/'
@@ -123,8 +180,13 @@ export interface FileRouteTypes {
     | '/_layout/dashboard'
     | '/_layout/equipements'
     | '/_layout/licences'
+    | '/_layout/organisations'
+    | '/_layout/parametres'
+    | '/_layout/users'
     | '/_layoutRegisterLogin/login'
     | '/_layoutRegisterLogin/register'
+    | '/_layout/rapports/inventaire'
+    | '/_layout/rapports/licences-expirantes'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -170,6 +232,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutRegisterLoginLoginRouteImport
       parentRoute: typeof LayoutRegisterLoginRoute
     }
+    '/_layout/users': {
+      id: '/_layout/users'
+      path: '/users'
+      fullPath: '/users'
+      preLoaderRoute: typeof LayoutUsersRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/parametres': {
+      id: '/_layout/parametres'
+      path: '/parametres'
+      fullPath: '/parametres'
+      preLoaderRoute: typeof LayoutParametresRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/organisations': {
+      id: '/_layout/organisations'
+      path: '/organisations'
+      fullPath: '/organisations'
+      preLoaderRoute: typeof LayoutOrganisationsRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/licences': {
       id: '/_layout/licences'
       path: '/licences'
@@ -198,6 +281,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAffectationsRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/rapports/licences-expirantes': {
+      id: '/_layout/rapports/licences-expirantes'
+      path: '/rapports/licences-expirantes'
+      fullPath: '/rapports/licences-expirantes'
+      preLoaderRoute: typeof LayoutRapportsLicencesExpirantesRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/rapports/inventaire': {
+      id: '/_layout/rapports/inventaire'
+      path: '/rapports/inventaire'
+      fullPath: '/rapports/inventaire'
+      preLoaderRoute: typeof LayoutRapportsInventaireRouteImport
+      parentRoute: typeof LayoutRoute
+    }
   }
 }
 
@@ -206,6 +303,11 @@ interface LayoutRouteChildren {
   LayoutDashboardRoute: typeof LayoutDashboardRoute
   LayoutEquipementsRoute: typeof LayoutEquipementsRoute
   LayoutLicencesRoute: typeof LayoutLicencesRoute
+  LayoutOrganisationsRoute: typeof LayoutOrganisationsRoute
+  LayoutParametresRoute: typeof LayoutParametresRoute
+  LayoutUsersRoute: typeof LayoutUsersRoute
+  LayoutRapportsInventaireRoute: typeof LayoutRapportsInventaireRoute
+  LayoutRapportsLicencesExpirantesRoute: typeof LayoutRapportsLicencesExpirantesRoute
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
@@ -213,6 +315,11 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutDashboardRoute: LayoutDashboardRoute,
   LayoutEquipementsRoute: LayoutEquipementsRoute,
   LayoutLicencesRoute: LayoutLicencesRoute,
+  LayoutOrganisationsRoute: LayoutOrganisationsRoute,
+  LayoutParametresRoute: LayoutParametresRoute,
+  LayoutUsersRoute: LayoutUsersRoute,
+  LayoutRapportsInventaireRoute: LayoutRapportsInventaireRoute,
+  LayoutRapportsLicencesExpirantesRoute: LayoutRapportsLicencesExpirantesRoute,
 }
 
 const LayoutRouteWithChildren =

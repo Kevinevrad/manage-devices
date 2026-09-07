@@ -25,14 +25,22 @@ type AppRoutePath =
   | "/dashboard"
   | "/equipements"
   | "/licences"
-  | "/affectations";
+  | "/affectations"
+  | "/users"
+  | "/rapports/inventaire"
+  | "/rapports/licences-expirantes"
+  | "/parametres";
 
 const isRouteLink = (url: string): url is AppRoutePath =>
   url === "/" ||
   url === "/dashboard" ||
   url === "/equipements" ||
   url === "/licences" ||
-  url === "/affectations";
+  url === "/affectations" ||
+  url === "/users" ||
+  url === "/rapports/inventaire" ||
+  url === "/rapports/licences-expirantes" ||
+  url === "/parametres";
 
 /** Bouton principal d'un groupe de navigation. */
 function NavButton({ item, active }: { item: NavItem; active: boolean }) {

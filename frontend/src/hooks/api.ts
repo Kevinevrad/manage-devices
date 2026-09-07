@@ -22,7 +22,11 @@ import type {
   DonneesLicence,
   DonneesModificationEquipement,
 } from "@/types/api";
-import { versAffectations, versEquipements, versLicences } from "@/lib/mappers";
+import {
+  versAffectations,
+  versEquipements,
+  versLicences,
+} from "@/lib/mappers";
 
 /** Invalide toutes les clés d'une ressource (préfixe de clé de cache). */
 function invalider(
@@ -193,5 +197,166 @@ export function useSupprimerLicence() {
     },
     onError: (error: unknown) =>
       toast.error(messageErreur(error, "Suppression impossible.")),
+  });
+}
+
+/** Modifie une licence puis invalide la liste des licences. */
+export function useModifierLicence() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, donnees }: { id: number; donnees: Partial<DonneesLicence> }) =>
+      api.logiciels.modifier(id, donnees),
+    onSuccess: (licence) => {
+      invalider(queryClient, "licences");
+      toast.success(`Licence « ${licence.logiciel} » modifiée.`);
+    },
+    onError: (error: unknown) =>
+      toast.error(messageErreur(error, "Modification impossible.")),
+  });
+}
+
+// ---------------------------------------------------------------
+// Organisations
+// ---------------------------------------------------------------
+
+/** Liste des organisations (DTO brut). */
+export function useOrganisations() {
+  return useQuery({
+    queryKey: ["organisations"] as const,
+    queryFn: () => api.organisations.lister(),
+  });
+}
+
+/** Crée une organisation puis invalide la liste (réservé aux admins). */
+export function useCreerOrganisation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (donnees: { nom: string }) => api.organisations.creer(donnees),
+    onSuccess: (organisation) => {
+      invalider(queryClient, "organisations");
+      toast.success(`Organisation « ${organisation.nom} » créée.`);
+    },
+    onError: (error: unknown) =>
+      toast.error(messageErreur(error, "Création de l'organisation impossible.")),
+  });
+}
+
+/** Modifie une organisation puis invalide la liste (réservé aux admins). */
+export function useModifierOrganisation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, donnees }: { id: number; donnees: { nom: string } }) =>
+      api.organisations.modifier(id, donnees),
+    onSuccess: (organisation) => {
+      invalider(queryClient, "organisations");
+      toast.success(`Organisation « ${organisation.nom} » modifiée.`);
+    },
+    onError: (error: unknown) =>
+      toast.error(messageErreur(error, "Modification impossible.")),
+  });
+}
+
+/** Supprime une organisation puis invalide la liste (réservé aux admins). */
+export function useSupprimerOrganisation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.organisations.supprimer(id),
+    onSuccess: () => {
+      invalider(queryClient, "organisations");
+      toast.success("Organisation supprimée.");
+    },
+    onError: (error: unknown) =>
+      toast.error(messageErreur(error, "Suppression impossible.")),
+  });
+}
+
+// ---------------------------------------------------------------
+// Utilisateurs (mutations)
+// ---------------------------------------------------------------
+
+/** Crée un utilisateur puis invalide la liste. */
+export function useCreerUtilisateur() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (donnees: {
+      nom: string;
+      prenom: string;
+      email: string;
+      motDePasse: string;
+      structure?: string;
+      service?: string;
+      role?: string;
+    }) => api.utilisateurs.creer(donnees),
+    onSuccess: (utilisateur) => {
+      invalider(queryClient, "utilisateurs");
+      toast.success(`Utilisateur « ${utilisateur.nomComplet} » créé.`);
+    },
+    onError: (error: unknown) =>
+      toast.error(messageErreur(error, "Création de l'utilisateur impossible.")),
+  });
+}
+
+/** Modifie un utilisateur puis invalide la liste. */
+export function useModifierUtilisateur() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, donnees }: { id: number; donnees: { nom?: string; prenom?: string; email?: string; structure?: string; service?: string; role?: string } }) =>
+      api.utilisateurs.modifier(id, donnees),
+    onSuccess: (utilisateur) => {
+      invalider(queryClient, "utilisateurs");
+      toast.success(`Utilisateur « ${utilisateur.nomComplet} » modifié.`);
+    },
+    onError: (error: unknown) =>
+      toast.error(messageErreur(error, "Modification impossible.")),
+  });
+}
+
+/** Supprime un utilisateur puis invalide la liste (réservé aux admins). */
+export function useSupprimerUtilisateur() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.utilisateurs.supprimer(id),
+    onSuccess: () => {
+      invalider(queryClient, "utilisateurs");
+      toast.success("Utilisateur supprimé.");
+    },
+    onError: (error: unknown) =>
+      toast.error(messageErreur(error, "Suppression impossible.")),
+  });
+}
+
+// ---------------------------------------------------------------
+// Licences sur équipements (installation / désinstallation)
+// ---------------------------------------------------------------
+
+/** Installe une licence sur un équipement puis invalide les listes. */
+export function useInstallerLicence() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ equipementId, logicielId }: { equipementId: number; logicielId: number }) =>
+      api.equipements.installerLicence(equipementId, logicielId),
+    onSuccess: () => {
+      invalider(queryClient, "equipements");
+      invalider(queryClient, "licences");
+      toast.success("Licence installée.");
+    },
+    onError: (error: unknown) =>
+      toast.error(messageErreur(error, "Installation de la licence impossible.")),
+  });
+}
+
+/** Désinstalle une licence d'un équipement puis invalide les listes. */
+export function useDesinstallerLicence() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ equipementId, logicielId }: { equipementId: number; logicielId: number }) =>
+      api.equipements.desinstallerLicence(equipementId, logicielId),
+    onSuccess: () => {
+      invalider(queryClient, "equipements");
+      invalider(queryClient, "licences");
+      toast.success("Licence désinstallée.");
+    },
+    onError: (error: unknown) =>
+      toast.error(messageErreur(error, "Désinstallation impossible.")),
   });
 }
