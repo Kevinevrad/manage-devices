@@ -119,5 +119,5 @@ Chaque exécution part d'une base neuve (`prisma/test.db`, recréée par les mig
 - ✅ Créations et mutations depuis l'UI : ajout d'équipement, ajout de licence, nouvelle affectation et retour du matériel (toasts + invalidation TanStack Query)
 - ✅ Édition des équipements et suppression (équipements, licences) depuis les menus d'actions des tables
 - ✅ Graphiques du dashboard sur données réelles (répartition par statut, tendance des affectations sur 6 mois)
-- ⬜ Export de données et rapports
+- ✅ Export CSV des équipements, licences et affectations (scope tenant appliqué, BOM UTF-8)
 - ✅ Isolation stricte par tenant (JWT enrichi, cloisonnement des listes et des accès par id, anti-IDOR)
