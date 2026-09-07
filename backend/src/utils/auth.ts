@@ -35,12 +35,14 @@ export async function verifierMotDePasse(
 export interface ChargeUtileJetton {
   id: number;
   role: string;
+  organisationId: number | null;
 }
 
 /** Signe un JWT de session pour l'utilisateur donné. */
 export function signerJetton(utilisateur: {
   id: number;
   role: string;
+  organisationId: number | null;
 }): string {
   const options: jwt.SignOptions = {
     subject: String(utilisateur.id),
@@ -51,7 +53,11 @@ export function signerJetton(utilisateur: {
       jwt.SignOptions["expiresIn"]
     >;
   }
-  return jwt.sign({ role: utilisateur.role }, JWT_SECRET, options);
+  return jwt.sign(
+    { role: utilisateur.role, organisationId: utilisateur.organisationId },
+    JWT_SECRET,
+    options,
+  );
 }
 
 /** Vérifie un JWT et retourne sa charge utile (401 sinon). */
@@ -63,10 +69,15 @@ export function verifierJetton(jetton: string): ChargeUtileJetton {
     }
     const id = Number(charge.sub);
     const role = charge.role;
+    const organisationIdBrut = charge.organisationId;
+    const organisationId =
+      organisationIdBrut === undefined || organisationIdBrut === null
+        ? null
+        : Number(organisationIdBrut);
     if (!Number.isInteger(id) || id <= 0 || typeof role !== "string") {
       throw new Error("Charge utile incomplète.");
     }
-    return { id, role };
+    return { id, role, organisationId };
   } catch {
     throw ApiError.unauthorized(
       "Session invalide ou expirée. Reconnectez-vous.",

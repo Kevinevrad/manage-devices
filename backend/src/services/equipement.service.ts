@@ -19,6 +19,11 @@ import {
   relationOrganisation,
   relationOrganisationCreation,
 } from "./organisation.service";
+import type { UtilisateurAuthentifie } from "../middlewares/auth.middleware";
+import {
+  contrainteOrganisation,
+  verifierVisibilite,
+} from "./tenant";
 import { verifierUtilisateur } from "./user.service";
 
 /** Include Prisma : utilisateur courant + licences installées. */
@@ -44,12 +49,16 @@ interface EquipementPayload {
   organisationId?: unknown;
 }
 
-/** Vérifie qu'un équipement existe (404 sinon). */
-export async function verifierEquipement(id: number) {
+/** Vérifie qu'un équipement existe et est visible (404 sinon). */
+export async function verifierEquipement(
+  id: number,
+  utilisateur?: UtilisateurAuthentifie,
+) {
   const equipement = await prisma.equipement.findUnique({ where: { id } });
   if (equipement === null) {
     throw ApiError.notFound(`Équipement ${id} introuvable.`);
   }
+  if (utilisateur !== undefined) verifierVisibilite(equipement, utilisateur);
   return equipement;
 }
 
@@ -58,7 +67,10 @@ export async function verifierEquipement(id: number) {
  * Filtres : ?statut=… &categorie=… (ou &type=…) &q=… (nom, marque, n° de série)
  * &organisationId=…
  */
-export async function listerEquipements(query: Record<string, unknown>) {
+export async function listerEquipements(
+  query: Record<string, unknown>,
+  utilisateur: UtilisateurAuthentifie,
+) {
   const statutLabel = premierTexte(query.statut);
   const statutFiltre =
     statutLabel === undefined
@@ -77,6 +89,9 @@ export async function listerEquipements(query: Record<string, unknown>) {
   if (statutFiltre !== undefined) where.statut = statutFiltre;
   if (categorie !== undefined) where.type = categorie;
   if (organisationId !== undefined) where.organisationId = organisationId;
+  // Isolation multi-tenant : prioritaire sur le filtre explicite
+  const contrainte = contrainteOrganisation(utilisateur);
+  if (contrainte !== undefined) where.organisationId = contrainte;
   if (recherche !== undefined) {
     where.OR = [
       { nom: { contains: recherche } },
@@ -93,8 +108,11 @@ export async function listerEquipements(query: Record<string, unknown>) {
   return equipements.map(versDto);
 }
 
-/** Récupère un équipement par son identifiant (404 sinon). */
-export async function obtenirEquipement(id: number) {
+/** Récupère un équipement par son identifiant (404 sinon, 404 hors tenant). */
+export async function obtenirEquipement(
+  id: number,
+  utilisateur: UtilisateurAuthentifie,
+) {
   const equipement = await prisma.equipement.findUnique({
     where: { id },
     include: includeComplet,
@@ -102,11 +120,15 @@ export async function obtenirEquipement(id: number) {
   if (equipement === null) {
     throw ApiError.notFound(`Équipement ${id} introuvable.`);
   }
+  verifierVisibilite(equipement, utilisateur);
   return versDto(equipement);
 }
 
 /** Crée un équipement (le n° de série doit être unique — 409 sinon). */
-export async function creerEquipement(payload: EquipementPayload) {
+export async function creerEquipement(
+  payload: EquipementPayload,
+  utilisateur: UtilisateurAuthentifie,
+) {
   const data: Prisma.EquipementCreateInput = {
     nom: texteObligatoire(payload.nom, "nom"),
     type: texteObligatoire(payload.type, "type"),
@@ -129,11 +151,18 @@ export async function creerEquipement(payload: EquipementPayload) {
     if (statut === undefined) data.statut = StatutEquipement.EnService;
   }
 
-  // Rattachement optionnel à une organisation (404 si inconnue)
-  const organisation = await relationOrganisationCreation(
-    payload.organisationId,
-  );
-  if (organisation !== undefined) data.organisation = organisation;
+  // Rattachement à une organisation :
+  // - utilisateur cloisonné → son organisation est imposée (payload ignoré) ;
+  // - admin / non cloisonné → organisationId du payload (404 si inconnue).
+  const contrainte = contrainteOrganisation(utilisateur);
+  if (contrainte !== undefined) {
+    data.organisation = { connect: { id: contrainte } };
+  } else {
+    const organisation = await relationOrganisationCreation(
+      payload.organisationId,
+    );
+    if (organisation !== undefined) data.organisation = organisation;
+  }
 
   const equipement = await prisma.equipement.create({
     data,
@@ -146,8 +175,9 @@ export async function creerEquipement(payload: EquipementPayload) {
 export async function modifierEquipement(
   id: number,
   payload: EquipementPayload,
+  utilisateur: UtilisateurAuthentifie,
 ) {
-  await verifierEquipement(id);
+  await verifierEquipement(id, utilisateur);
   const data = await validerMiseAJour(payload);
 
   const equipement = await prisma.equipement.update({
@@ -162,13 +192,19 @@ export async function modifierEquipement(
  * Supprime un équipement.
  * Les affectations et installations de licences liées sont supprimées (cascade).
  */
-export async function supprimerEquipement(id: number) {
-  await verifierEquipement(id);
+export async function supprimerEquipement(
+  id: number,
+  utilisateur: UtilisateurAuthentifie,
+) {
+  await verifierEquipement(id, utilisateur);
   await prisma.equipement.delete({ where: { id } });
 }
 
 /** Liste les logiciels installés sur un équipement. */
-export async function listerLogicielsInstalles(id: number) {
+export async function listerLogicielsInstalles(
+  id: number,
+  utilisateur: UtilisateurAuthentifie,
+) {
   const equipement = await prisma.equipement.findUnique({
     where: { id },
     include: { logiciels: { include: { logiciel: true } } },
@@ -176,6 +212,7 @@ export async function listerLogicielsInstalles(id: number) {
   if (equipement === null) {
     throw ApiError.notFound(`Équipement ${id} introuvable.`);
   }
+  verifierVisibilite(equipement, utilisateur);
   return equipement.logiciels.map((installation) => installation.logiciel);
 }
 
@@ -183,9 +220,10 @@ export async function listerLogicielsInstalles(id: number) {
 export async function installerLogiciel(
   id: number,
   payload: { logicielId?: unknown },
+  utilisateur: UtilisateurAuthentifie,
 ) {
   const logicielId = entierObligatoire(payload.logicielId, "logicielId");
-  await verifierEquipement(id);
+  await verifierEquipement(id, utilisateur);
 
   const logiciel = await prisma.logiciel.findUnique({
     where: { id: logicielId },
@@ -211,12 +249,16 @@ export async function installerLogiciel(
   await prisma.licencesSurEquipement.create({
     data: { equipementId: id, logicielId },
   });
-  return obtenirEquipement(id);
+  return obtenirEquipement(id, utilisateur);
 }
 
 /** Désinstalle une licence d'un équipement. */
-export async function desinstallerLogiciel(id: number, logicielId: number) {
-  await verifierEquipement(id);
+export async function desinstallerLogiciel(
+  id: number,
+  logicielId: number,
+  utilisateur: UtilisateurAuthentifie,
+) {
+  await verifierEquipement(id, utilisateur);
   const installation = await prisma.licencesSurEquipement.findUnique({
     where: { equipementId_logicielId: { equipementId: id, logicielId } },
   });

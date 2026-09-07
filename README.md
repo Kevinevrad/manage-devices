@@ -84,6 +84,7 @@ Créés par `npm run db:seed`, tous avec le mot de passe **`Password123!`** :
 - Le secret est défini par `JWT_SECRET` (backend/.env) — **à changer impérativement en production**.
 - En-têtes de sécurité **helmet** sur toutes les réponses (`X-Content-Type-Options`, `X-Frame-Options`, HSTS…).
 - **CORS restrictif** : seules les origines listées dans `CORS_ORIGIN` (backend/.env, séparées par des virgules) reçoivent les en-têtes d'autorisation — défaut : `http://localhost:5173`.
+- **Isolation par tenant** : le JWT embarque l'organisation ; `admin` = accès global, tout autre rôle avec organisation est cloisonné à ses données (404 hors tenant, créations rattachées automatiquement).
 
 ## Règles métier principales
 
@@ -119,4 +120,4 @@ Chaque exécution part d'une base neuve (`prisma/test.db`, recréée par les mig
 - ✅ Édition des équipements et suppression (équipements, licences) depuis les menus d'actions des tables
 - ✅ Graphiques du dashboard sur données réelles (répartition par statut, tendance des affectations sur 6 mois)
 - ⬜ Export de données et rapports
-- ⬜ Isolation stricte par tenant (cloisonnement automatique des requêtes selon l'organisation de l'utilisateur connecté)
+- ✅ Isolation stricte par tenant (JWT enrichi, cloisonnement des listes et des accès par id, anti-IDOR)

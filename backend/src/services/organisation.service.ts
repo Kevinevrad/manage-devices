@@ -3,6 +3,8 @@ import { Prisma } from "../../prisma/generated/prisma/client";
 import { prisma } from "../config/prisma";
 import { ApiError } from "../utils/api-error";
 import { entierObligatoire, texteObligatoire } from "../utils/validation";
+import type { UtilisateurAuthentifie } from "../middlewares/auth.middleware";
+import { contrainteOrganisation } from "./tenant";
 
 /** Include Prisma : volumétrie des entités rattachées. */
 const includeComplet = {
@@ -26,17 +28,29 @@ export async function verifierOrganisation(id: number) {
   return organisation;
 }
 
-/** Liste les organisations avec leurs volumétries. */
-export async function listerOrganisations() {
+/** Liste les organisations avec leurs volumétries (tenant cloisonné : la sienne). */
+export async function listerOrganisations(
+  utilisateur: UtilisateurAuthentifie,
+) {
+  const contrainte = contrainteOrganisation(utilisateur);
   const organisations = await prisma.organisation.findMany({
+    where:
+      contrainte !== undefined ? { id: contrainte } : {},
     include: includeComplet,
     orderBy: { id: "asc" },
   });
   return organisations.map(versDto);
 }
 
-/** Récupère une organisation par son identifiant (404 sinon). */
-export async function obtenirOrganisation(id: number) {
+/** Récupère une organisation par son identifiant (404 sinon, 404 hors tenant). */
+export async function obtenirOrganisation(
+  id: number,
+  utilisateur: UtilisateurAuthentifie,
+) {
+  const contrainte = contrainteOrganisation(utilisateur);
+  if (contrainte !== undefined && id !== contrainte) {
+    throw ApiError.notFound(`Organisation ${id} introuvable.`);
+  }
   const organisation = await prisma.organisation.findUnique({
     where: { id },
     include: includeComplet,

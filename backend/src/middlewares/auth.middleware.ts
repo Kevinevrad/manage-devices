@@ -6,12 +6,22 @@ import { verifierJetton } from "../utils/auth";
 export interface UtilisateurAuthentifie {
   id: number;
   role: string;
+  /** Organisation du tenant (null = utilisateur de plateforme, non cloisonné). */
+  organisationId: number | null;
 }
 
 declare module "express-serve-static-core" {
   interface Request {
     utilisateur?: UtilisateurAuthentifie;
   }
+}
+
+/** Récupère l'utilisateur authentifié (401 si absent — usage interne contrôleur). */
+export function authentifieRequis(req: Request): UtilisateurAuthentifie {
+  if (req.utilisateur === undefined) {
+    throw ApiError.unauthorized("Authentification requise.");
+  }
+  return req.utilisateur;
 }
 
 /** Exige un JWT « Bearer » valide et l'attache à req.utilisateur. */

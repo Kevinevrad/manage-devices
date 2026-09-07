@@ -46,8 +46,13 @@ export async function creerUtilisateurTest(options: OptionsUtilisateur = {}) {
 export function jettonPour(utilisateur: {
   id: number;
   role: string;
+  organisationId?: number | null;
 }): string {
-  return signerJetton({ id: utilisateur.id, role: utilisateur.role });
+  return signerJetton({
+    id: utilisateur.id,
+    role: utilisateur.role,
+    organisationId: utilisateur.organisationId ?? null,
+  });
 }
 
 /** En-tête Authorization prêt pour supertest. */

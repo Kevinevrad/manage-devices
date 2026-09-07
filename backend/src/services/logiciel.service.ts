@@ -19,6 +19,8 @@ import {
   relationOrganisation,
   relationOrganisationCreation,
 } from "./organisation.service";
+import type { UtilisateurAuthentifie } from "../middlewares/auth.middleware";
+import { contrainteOrganisation, verifierVisibilite } from "./tenant";
 
 /** Include Prisma : nombre d'installations (= sièges utilisés). */
 const includeComplet = {
@@ -42,12 +44,16 @@ interface LogicielPayload {
   organisationId?: unknown;
 }
 
-/** Vérifie qu'un logiciel existe (404 sinon). */
-export async function verifierLogiciel(id: number) {
+/** Vérifie qu'un logiciel existe et est visible (404 sinon). */
+export async function verifierLogiciel(
+  id: number,
+  utilisateur?: UtilisateurAuthentifie,
+) {
   const logiciel = await prisma.logiciel.findUnique({ where: { id } });
   if (logiciel === null) {
     throw ApiError.notFound(`Logiciel ${id} introuvable.`);
   }
+  if (utilisateur !== undefined) verifierVisibilite(logiciel, utilisateur);
   return logiciel;
 }
 
@@ -56,7 +62,10 @@ export async function verifierLogiciel(id: number) {
  * Filtres : ?type=… (Abonnement / Perpétuelle) &q=… &expireSous=… (jours)
  * &organisationId=…
  */
-export async function listerLogiciels(query: Record<string, unknown>) {
+export async function listerLogiciels(
+  query: Record<string, unknown>,
+  utilisateur: UtilisateurAuthentifie,
+) {
   const typeLabel = premierTexte(query.type);
   const typeFiltre =
     typeLabel === undefined ? undefined : typeLicenceDepuisLibelle(typeLabel);
@@ -72,6 +81,9 @@ export async function listerLogiciels(query: Record<string, unknown>) {
   const where: Prisma.LogicielWhereInput = {};
   if (typeFiltre !== undefined) where.typeLicence = typeFiltre;
   if (organisationId !== undefined) where.organisationId = organisationId;
+  // Isolation multi-tenant : prioritaire sur le filtre explicite
+  const contrainte = contrainteOrganisation(utilisateur);
+  if (contrainte !== undefined) where.organisationId = contrainte;
   if (recherche !== undefined) {
     where.OR = [
       { nom: { contains: recherche } },
@@ -97,7 +109,10 @@ export async function listerLogiciels(query: Record<string, unknown>) {
 }
 
 /** Récupère un logiciel (avec la liste de ses installations). */
-export async function obtenirLogiciel(id: number) {
+export async function obtenirLogiciel(
+  id: number,
+  utilisateur: UtilisateurAuthentifie,
+) {
   const logiciel = await prisma.logiciel.findUnique({
     where: { id },
     include: {
@@ -108,6 +123,7 @@ export async function obtenirLogiciel(id: number) {
   if (logiciel === null) {
     throw ApiError.notFound(`Logiciel ${id} introuvable.`);
   }
+  verifierVisibilite(logiciel, utilisateur);
   return {
     ...versDto(logiciel),
     installations: logiciel.affectations.map((installation) => ({
@@ -123,8 +139,21 @@ export async function obtenirLogiciel(id: number) {
 }
 
 /** Crée un logiciel (la clé de licence doit être unique — 409 sinon). */
-export async function creerLogiciel(payload: LogicielPayload) {
+export async function creerLogiciel(
+  payload: LogicielPayload,
+  utilisateur: UtilisateurAuthentifie,
+) {
   const data = await validerCreation(payload);
+  // Utilisateur cloisonné : la licence naît dans son organisation
+  const contrainte = contrainteOrganisation(utilisateur);
+  if (contrainte !== undefined) {
+    data.organisation = { connect: { id: contrainte } };
+  } else {
+    const organisation = await relationOrganisationCreation(
+      payload.organisationId,
+    );
+    if (organisation !== undefined) data.organisation = organisation;
+  }
   const logiciel = await prisma.logiciel.create({
     data,
     include: includeComplet,
@@ -133,8 +162,12 @@ export async function creerLogiciel(payload: LogicielPayload) {
 }
 
 /** Met à jour partiellement un logiciel. */
-export async function modifierLogiciel(id: number, payload: LogicielPayload) {
-  await verifierLogiciel(id);
+export async function modifierLogiciel(
+  id: number,
+  payload: LogicielPayload,
+  utilisateur: UtilisateurAuthentifie,
+) {
+  await verifierLogiciel(id, utilisateur);
   const data: Prisma.LogicielUpdateInput = {};
 
   if (payload.nom !== undefined) data.nom = texteObligatoire(payload.nom, "nom");
@@ -180,8 +213,11 @@ export async function modifierLogiciel(id: number, payload: LogicielPayload) {
 }
 
 /** Supprime un logiciel (désinstalle ses installations, cascade). */
-export async function supprimerLogiciel(id: number) {
-  await verifierLogiciel(id);
+export async function supprimerLogiciel(
+  id: number,
+  utilisateur: UtilisateurAuthentifie,
+) {
+  await verifierLogiciel(id, utilisateur);
   await prisma.logiciel.delete({ where: { id } });
 }
 

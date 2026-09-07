@@ -9,6 +9,11 @@ import { ApiError } from "../utils/api-error";
 import { hacherMotDePasse, motDePasseValide } from "../utils/auth";
 import { entierOuIndefini } from "../utils/query";
 import { emailObligatoire, texteObligatoire } from "../utils/validation";
+import type { UtilisateurAuthentifie } from "../middlewares/auth.middleware";
+import {
+  contrainteOrganisation,
+  verifierVisibilite,
+} from "./tenant";
 import { relationOrganisation, relationOrganisationCreation } from "./organisation.service";
 
 /** Include Prisma : équipements rattachés + historique d'affectations. */
@@ -62,11 +67,17 @@ function roleOptionnel(valeur: unknown): RoleUtilisateur | undefined {
 }
 
 /** Liste les utilisateurs (filtre : ?organisationId=…). */
-export async function listerUsers(query: Record<string, unknown>) {
+export async function listerUsers(
+  query: Record<string, unknown>,
+  utilisateur: UtilisateurAuthentifie,
+) {
   const organisationId = entierOuIndefini(query.organisationId);
 
   const where: Prisma.UserWhereInput = {};
   if (organisationId !== undefined) where.organisationId = organisationId;
+  // Isolation multi-tenant : prioritaire sur le filtre explicite
+  const contrainte = contrainteOrganisation(utilisateur);
+  if (contrainte !== undefined) where.organisationId = contrainte;
 
   const users = await prisma.user.findMany({
     where,
@@ -76,8 +87,11 @@ export async function listerUsers(query: Record<string, unknown>) {
   return users.map(versDto);
 }
 
-/** Récupère un utilisateur par son identifiant (404 sinon). */
-export async function obtenirUser(id: number) {
+/** Récupère un utilisateur par son identifiant (404 sinon, 404 hors tenant). */
+export async function obtenirUser(
+  id: number,
+  utilisateur: UtilisateurAuthentifie,
+) {
   const user = await prisma.user.findUnique({
     where: { id },
     include: includeComplet,
@@ -85,11 +99,15 @@ export async function obtenirUser(id: number) {
   if (user === null) {
     throw ApiError.notFound(`Utilisateur ${id} introuvable.`);
   }
+  verifierVisibilite(user, utilisateur);
   return versDto(user);
 }
 
 /** Crée un utilisateur (l'e-mail doit être unique — 409 sinon). */
-export async function creerUser(payload: UserPayload) {
+export async function creerUser(
+  payload: UserPayload,
+  utilisateur: UtilisateurAuthentifie,
+) {
   const data: Prisma.UserCreateInput = {
     nom: texteObligatoire(payload.nom, "nom"),
     prenom: texteObligatoire(payload.prenom, "prenom"),
@@ -102,19 +120,34 @@ export async function creerUser(payload: UserPayload) {
   const role = roleOptionnel(payload.role);
   if (role !== undefined) data.role = role;
 
-  // Rattachement optionnel à une organisation (404 si inconnue)
-  const organisation = await relationOrganisationCreation(
-    payload.organisationId,
-  );
-  if (organisation !== undefined) data.organisation = organisation;
+  // Rattachement à une organisation :
+  // - utilisateur cloisonné → son organisation est imposée (payload ignoré) ;
+  // - admin / non cloisonné → organisationId du payload (404 si inconnue).
+  const contrainte = contrainteOrganisation(utilisateur);
+  if (contrainte !== undefined) {
+    data.organisation = { connect: { id: contrainte } };
+  } else {
+    const organisation = await relationOrganisationCreation(
+      payload.organisationId,
+    );
+    if (organisation !== undefined) data.organisation = organisation;
+  }
 
   const user = await prisma.user.create({ data, include: includeComplet });
   return versDto(user);
 }
 
 /** Met à jour partiellement un utilisateur. */
-export async function modifierUser(id: number, payload: UserPayload) {
-  await verifierExistence(id);
+export async function modifierUser(
+  id: number,
+  payload: UserPayload,
+  utilisateur: UtilisateurAuthentifie,
+) {
+  const existant = await prisma.user.findUnique({ where: { id } });
+  if (existant === null) {
+    throw ApiError.notFound(`Utilisateur ${id} introuvable.`);
+  }
+  verifierVisibilite(existant, utilisateur);
   const data: Prisma.UserUpdateInput = {};
 
   if (payload.nom !== undefined) data.nom = texteObligatoire(payload.nom, "nom");
@@ -146,8 +179,15 @@ export async function modifierUser(id: number, payload: UserPayload) {
 }
 
 /** Supprime un utilisateur (ses équipements repassent « sans utilisateur »). */
-export async function supprimerUser(id: number) {
-  await verifierExistence(id);
+export async function supprimerUser(
+  id: number,
+  utilisateur: UtilisateurAuthentifie,
+) {
+  const existant = await prisma.user.findUnique({ where: { id } });
+  if (existant === null) {
+    throw ApiError.notFound(`Utilisateur ${id} introuvable.`);
+  }
+  verifierVisibilite(existant, utilisateur);
   await prisma.user.delete({ where: { id } }); // Equipement.userId passe à NULL (ON DELETE SET NULL)
 }
 

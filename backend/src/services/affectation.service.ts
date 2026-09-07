@@ -5,6 +5,8 @@ import { StatutEquipement } from "../domain/statuts";
 import { prisma } from "../config/prisma";
 import { ApiError } from "../utils/api-error";
 import { entierOuIndefini, premierTexte } from "../utils/query";
+import type { UtilisateurAuthentifie } from "../middlewares/auth.middleware";
+import { contrainteOrganisation } from "./tenant";
 import {
   dateOptionnelle,
   entierObligatoire,
@@ -42,7 +44,10 @@ interface AffectationPayload {
  * Filtres : ?equipementId=… &userId=… &ouvertes=true (affectations en cours)
  * &organisationId=… (héritée de l'équipement)
  */
-export async function listerAffectations(query: Record<string, unknown>) {
+export async function listerAffectations(
+  query: Record<string, unknown>,
+  utilisateur: UtilisateurAuthentifie,
+) {
   const equipementId = entierOuIndefini(query.equipementId);
   const userId = entierOuIndefini(query.userId);
   const ouvertes = premierTexte(query.ouvertes) === "true";
@@ -56,6 +61,11 @@ export async function listerAffectations(query: Record<string, unknown>) {
     // L'affectation hérite de l'organisation de son équipement
     where.equipements = { organisationId };
   }
+  // Isolation multi-tenant : prioritaire sur le filtre explicite
+  const contrainte = contrainteOrganisation(utilisateur);
+  if (contrainte !== undefined) {
+    where.equipements = { organisationId: contrainte };
+  }
 
   return prisma.affectation.findMany({
     where,
@@ -65,13 +75,26 @@ export async function listerAffectations(query: Record<string, unknown>) {
 }
 
 /** Récupère une affectation par son identifiant. */
-export async function obtenirAffectation(id: number) {
+export async function obtenirAffectation(
+  id: number,
+  utilisateur?: UtilisateurAuthentifie,
+) {
   const affectation = await prisma.affectation.findUnique({
     where: { id },
     include: includeComplet,
   });
   if (affectation === null) {
     throw ApiError.notFound(`Affectation ${id} introuvable.`);
+  }
+  if (utilisateur !== undefined) {
+    // L'affectation hérite de l'organisation de son équipement
+    const contrainte = contrainteOrganisation(utilisateur);
+    if (
+      contrainte !== undefined &&
+      affectation.equipements.organisationId !== contrainte
+    ) {
+      throw ApiError.notFound(`Affectation ${id} introuvable.`);
+    }
   }
   return affectation;
 }
@@ -81,11 +104,20 @@ export async function obtenirAffectation(id: number) {
  * clôture les affectations ouvertes de l'équipement, crée l'historique
  * et fait passer l'équipement « En service ».
  */
-export async function creerAffectation(payload: AffectationPayload) {
+export async function creerAffectation(
+  payload: AffectationPayload,
+  utilisateur: UtilisateurAuthentifie,
+) {
   const equipementId = entierObligatoire(payload.equipementId, "equipementId");
   const userId = entierObligatoire(payload.userId, "userId");
-  await verifierEquipement(equipementId);
-  await verifierUtilisateur(userId);
+  await verifierEquipement(equipementId, utilisateur);
+  const utilisateurCible = await verifierUtilisateur(userId);
+
+  // Un utilisateur cloisonné ne peut affecter qu'au sein de son organisation
+  const contrainte = contrainteOrganisation(utilisateur);
+  if (contrainte !== undefined && utilisateurCible.organisationId !== contrainte) {
+    throw ApiError.notFound(`Utilisateur ${userId} introuvable.`);
+  }
 
   const dateDebut =
     dateOptionnelle(payload.dateDebut, "dateDebut") ?? new Date();
@@ -122,9 +154,12 @@ export async function creerAffectation(payload: AffectationPayload) {
  * Clôture une affectation (retour du matériel) :
  * dateFin renseignée, équipement détaché de l'utilisateur et repassé « En stock ».
  */
-export async function cloturerAffectation(idParam: unknown) {
+export async function cloturerAffectation(
+  idParam: unknown,
+  utilisateur: UtilisateurAuthentifie,
+) {
   const id = identifiantObligatoire(idParam);
-  const affectation = await obtenirAffectation(id);
+  const affectation = await obtenirAffectation(id, utilisateur);
   if (affectation.dateFin !== null) {
     throw ApiError.badRequest("Cette affectation est déjà clôturée.");
   }

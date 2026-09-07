@@ -50,7 +50,13 @@ export const ChartsSection = ({
               margin={{ left: 4, right: 12 }}
             >
               <defs>
-                <linearGradient id="fillAffectations" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient
+                  id="fillAffectations"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
                   <stop
                     offset="5%"
                     stopColor="var(--color-affectations)"
@@ -117,9 +123,7 @@ export const ChartsSection = ({
               <span className="font-heading text-2xl font-bold">
                 {totalEquipements}
               </span>
-              <span className="text-xs text-muted-foreground">
-                équipements
-              </span>
+              <span className="text-xs text-muted-foreground">équipements</span>
             </div>
           </div>
           <div className="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5">
@@ -129,7 +133,7 @@ export const ChartsSection = ({
                 className="flex items-center gap-1.5 text-xs text-muted-foreground"
               >
                 <span
-                  className="size-2 rounded-[2px]"
+                  className="size-2 rounded-xs"
                   style={{ backgroundColor: entry.fill }}
                 />
                 {entry.statut}

@@ -1,14 +1,17 @@
 import type { Request, Response } from "express";
 
+import { authentifieRequis } from "../middlewares/auth.middleware";
 import * as organisationService from "../services/organisation.service";
 import { identifiantObligatoire } from "../utils/validation";
 
 /** GET /api/organisations */
 export async function lister(
-  _req: Request,
+  req: Request,
   res: Response,
 ): Promise<void> {
-  const organisations = await organisationService.listerOrganisations();
+  const organisations = await organisationService.listerOrganisations(
+    authentifieRequis(req),
+  );
   res.json(organisations);
 }
 
@@ -16,6 +19,7 @@ export async function lister(
 export async function obtenir(req: Request, res: Response): Promise<void> {
   const organisation = await organisationService.obtenirOrganisation(
     identifiantObligatoire(req.params.id),
+    authentifieRequis(req),
   );
   res.json(organisation);
 }

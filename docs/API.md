@@ -279,7 +279,10 @@ Erreurs : `400` (nom manquant), `403` (non-admin), `404`, `409` (nom déjà pris
 
 **Filtrage** : les listes de chaque ressource acceptent le filtre `?organisationId=` (les affectations filtrent via l'organisation de leur équipement).
 
-> Note : le cloisonnement automatique par organisation de l'utilisateur connecté (isolation stricte par tenant) est une évolution prévue — pour l'instant le filtrage est explicitement demandé par le client.
+> 🔒 **Isolation stricte par tenant** : le JWT embarque l'organisation de l'utilisateur. Règles appliquées à **toutes** les ressources :
+> - rôle `admin` → **accès global** (support plateforme) ;
+> - autre rôle **avec organisation** → cloisonné : seules les données de son organisation sont visibles et modifiables (tout accès hors tenant renvoie **404**, anti-IDOR ; les créations sont rattachées automatiquement à son organisation, `organisationId` du payload ignoré) ;
+> - autre rôle **sans organisation** → non cloisonné (mode plateforme/démonstration).
 
 ---
 

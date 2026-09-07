@@ -75,10 +75,10 @@ function DashboardPage() {
   return (
     <div className="flex flex-col gap-6">
       {/* Hero — en-tête de bienvenue */}
-      <section className="relative animate-in fade-in slide-in-from-bottom-3 overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-[#00607c] to-[#003546] p-8 text-white duration-500 md:p-10">
+      <section className="relative animate-in fade-in slide-in-from-bottom-3 overflow-hidden rounded-2xl bg-linear-to-br from-primary via-[#00607c] to-[#003546] p-8 text-white duration-500 md:p-10">
         <div className="pointer-events-none absolute -top-24 -right-16 size-72 rounded-full bg-white/10 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-28 left-1/3 size-80 rounded-full bg-teal-300/20 blur-3xl" />
-        <div className="pointer-events-none absolute inset-0 opacity-[0.06] [background-image:linear-gradient(to_right,white_1px,transparent_1px),linear-gradient(to_bottom,white_1px,transparent_1px)] [background-size:32px_32px]" />
+        <div className="pointer-events-none absolute inset-0 opacity-[0.06] bg-[linear-gradient(to_right,white_1px,transparent_1px),linear-gradient(to_bottom,white_1px,transparent_1px)] bg-size-[32px_32px]" />
 
         <div className="relative flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div className="max-w-xl space-y-3">
