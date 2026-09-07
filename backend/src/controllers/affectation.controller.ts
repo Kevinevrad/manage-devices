@@ -31,6 +31,17 @@ export async function creer(req: Request, res: Response): Promise<void> {
   res.status(201).json(affectation);
 }
 
+/** GET /api/affectations/export — export CSV (scope tenant). */
+export async function exporter(req: Request, res: Response): Promise<void> {
+  const csv = await affectationService.exporterAffectationsCSV(
+    authentifieRequis(req),
+  );
+  res
+    .set("Content-Type", "text/csv; charset=utf-8")
+    .set("Content-Disposition", 'attachment; filename="affectations.csv"')
+    .send(csv);
+}
+
 /** PATCH /api/affectations/:id/retour — clôture l'affectation (retour matériel). */
 export async function retourner(req: Request, res: Response): Promise<void> {
   const affectation = await affectationService.cloturerAffectation(

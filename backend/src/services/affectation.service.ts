@@ -4,6 +4,7 @@ import { StatutEquipement } from "../domain/statuts";
 
 import { prisma } from "../config/prisma";
 import { ApiError } from "../utils/api-error";
+import { BOM_UTF8, ligneCSV } from "../utils/csv";
 import { entierOuIndefini, premierTexte } from "../utils/query";
 import type { UtilisateurAuthentifie } from "../middlewares/auth.middleware";
 import { contrainteOrganisation } from "./tenant";
@@ -176,4 +177,38 @@ export async function cloturerAffectation(
   });
 
   return maj;
+}
+
+/** Export CSV des affectations (scope tenant appliqué). */
+export async function exporterAffectationsCSV(
+  utilisateur: UtilisateurAuthentifie,
+): Promise<string> {
+  const affectations = await listerAffectations({}, utilisateur);
+  const lignes = [
+    ligneCSV([
+      "Id",
+      "Équipement",
+      "Type",
+      "Numéro de série",
+      "Utilisateur",
+      "Service",
+      "Date de début",
+      "Date de retour",
+      "Commentaire",
+    ]),
+    ...affectations.map((affectation) =>
+      ligneCSV([
+        affectation.id,
+        affectation.equipements.nom,
+        affectation.equipements.type,
+        affectation.equipements.numSerie,
+        `${affectation.user.prenom} ${affectation.user.nom}`,
+        affectation.user.service,
+        affectation.dateDebut.toISOString().slice(0, 10),
+        affectation.dateFin?.toISOString().slice(0, 10) ?? "",
+        affectation.commentaire ?? "",
+      ]),
+    ),
+  ];
+  return `${BOM_UTF8}${lignes.join("\n")}`;
 }

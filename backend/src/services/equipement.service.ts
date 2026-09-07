@@ -25,6 +25,7 @@ import {
   verifierVisibilite,
 } from "./tenant";
 import { verifierUtilisateur } from "./user.service";
+import { BOM_UTF8, ligneCSV } from "../utils/csv";
 
 /** Include Prisma : utilisateur courant + licences installées. */
 const includeComplet = {
@@ -270,6 +271,42 @@ export async function desinstallerLogiciel(
   await prisma.licencesSurEquipement.delete({
     where: { equipementId_logicielId: { equipementId: id, logicielId } },
   });
+}
+
+/** Export CSV du parc (scope tenant appliqué). */
+export async function exporterEquipementsCSV(
+  utilisateur: UtilisateurAuthentifie,
+): Promise<string> {
+  const equipements = await listerEquipements({}, utilisateur);
+  const lignes = [
+    ligneCSV([
+      "Id",
+      "Nom",
+      "Type",
+      "Marque",
+      "Numéro de série",
+      "Statut",
+      "Date d'achat",
+      "Prix (EUR)",
+      "Affecté à",
+      "Organisation",
+    ]),
+    ...equipements.map((equipement) =>
+      ligneCSV([
+        equipement.id,
+        equipement.nom,
+        equipement.type,
+        equipement.marque,
+        equipement.numSerie,
+        equipement.statut,
+        equipement.dateAchat.toISOString().slice(0, 10),
+        equipement.prix,
+        equipement.affecteA ?? "",
+        equipement.organisation?.nom ?? "",
+      ]),
+    ),
+  ];
+  return `${BOM_UTF8}${lignes.join("\n")}`;
 }
 
 // ---------------------------------------------------------------- Utilitaires

@@ -13,6 +13,8 @@ import {
 
 let jettonAdmin: Record<string, string> = {};
 let jettonUserA: Record<string, string> = {};
+let jettonUserB: Record<string, string> = {};
+let userBId = 0;
 
 let orgA = 0;
 let orgB = 0;
@@ -73,6 +75,20 @@ beforeAll(async () => {
     jettonPour({ id: userA.id, role: "user", organisationId: orgA }),
   );
 
+  // Utilisateur cloisonné à l'organisation B
+  const userB = await creerUtilisateurTest({
+    role: "user",
+    email: "tenant-b@exemple.com",
+  });
+  await prisma.user.update({
+    where: { id: userB.id },
+    data: { organisationId: orgB },
+  });
+  userBId = userB.id;
+  jettonUserB = enteteAuth(
+    jettonPour({ id: userB.id, role: "user", organisationId: orgB }),
+  );
+
   equipementA = await creerEquipementTenant("SN-TENANT-A", orgA);
   equipementB = await creerEquipementTenant("SN-TENANT-B", orgB);
 });
@@ -128,10 +144,11 @@ describe("Isolation des accès par identifiant (anti-IDOR)", () => {
   });
 
   it("l'affectation d'un autre tenant est invisible (liste et détail)", async () => {
+    // Créée par un utilisateur du tenant B (cohérent avec l'isolation)
     const creation = await request(app)
       .post("/api/affectations")
-      .set(jettonAdmin)
-      .send({ equipementId: equipementB, userId: 1 });
+      .set(jettonUserB)
+      .send({ equipementId: equipementB, userId: userBId });
     expect(creation.status).toBe(201);
 
     const liste = await request(app)

@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { IconDownload, IconLicense, IconPlus } from "@tabler/icons-react";
 import { createFileRoute } from "@tanstack/react-router";
+import { toast } from "sonner";
 
 import {
   Button,
@@ -12,6 +13,7 @@ import { MetricsSection } from "@/components/sections/metrics";
 import { LicencesTable } from "@/components/tables";
 import { useLicences } from "@/hooks/api";
 import { construireLicencesStats } from "@/lib/stats";
+import { exportarCSV } from "@/lib/export";
 
 export const Route = createFileRoute("/_layout/licences")({
   component: LicencesPage,
@@ -19,6 +21,12 @@ export const Route = createFileRoute("/_layout/licences")({
 
 function LicencesPage() {
   const [formulaireOuvert, setFormulaireOuvert] = useState(false);
+
+  const exporter = () => {
+    void exportarCSV("/logiciels/export", "licences.csv").catch(() =>
+      toast.error("Export impossible."),
+    );
+  };
   const {
     data: licences,
     isPending,
@@ -59,7 +67,7 @@ function LicencesPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline">
+          <Button variant="outline" onClick={exporter}>
             <IconDownload size={16} />
             Exporter
           </Button>

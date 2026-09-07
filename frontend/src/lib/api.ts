@@ -20,6 +20,19 @@ import type {
 
 const API_URL: string = import.meta.env.VITE_API_URL ?? "/api";
 
+/** Récupère un ressource autorisée et renvoie son texte (ex: CSV, via fetch brut). */
+export function requerirTexte(chemin: string): Promise<string> {
+  const jeton = obtenirJetton();
+  const entetes: Record<string, string> = {};
+  if (jeton !== null) entetes.Authorization = `Bearer ${jeton}`;
+  return fetch(`${API_URL}${chemin}`, { headers: entetes }).then((reponse) => {
+    if (!reponse.ok) {
+      throw new Error(`Erreur ${reponse.status} lors de l'export.`);
+    }
+    return reponse.text();
+  });
+}
+
 const CLE_JETTON = "manage-device:jetton";
 
 /** Jeton de session en mémoire, restauré depuis localStorage au démarrage. */

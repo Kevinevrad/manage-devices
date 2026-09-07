@@ -75,6 +75,17 @@ export async function installerLogiciel(
   res.status(201).json(equipement);
 }
 
+/** GET /api/equipements/export — export CSV du parc (scope tenant). */
+export async function exporter(req: Request, res: Response): Promise<void> {
+  const csv = await equipementService.exporterEquipementsCSV(
+    authentifieRequis(req),
+  );
+  res
+    .set("Content-Type", "text/csv; charset=utf-8")
+    .set("Content-Disposition", 'attachment; filename="equipements.csv"')
+    .send(csv);
+}
+
 /** DELETE /api/equipements/:id/logiciels/:logicielId — désinstaller. */
 export async function desinstallerLogiciel(
   req: Request,

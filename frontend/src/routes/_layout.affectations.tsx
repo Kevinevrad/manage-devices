@@ -5,6 +5,8 @@ import {
   IconPlus,
 } from "@tabler/icons-react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
+import { exportarCSV } from "@/lib/export";
 
 import {
   Button,
@@ -32,6 +34,12 @@ function AffectationsPage() {
   const { service } = Route.useSearch();
   const navigate = useNavigate();
   const [formulaireOuvert, setFormulaireOuvert] = useState(false);
+
+  const exporter = () => {
+    void exportarCSV("/affectations/export", "affectations.csv").catch(() =>
+      toast.error("Export impossible."),
+    );
+  };
   const {
     data: affectations,
     isPending,
@@ -85,7 +93,7 @@ function AffectationsPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline">
+          <Button variant="outline" onClick={exporter}>
             <IconDownload size={16} />
             Exporter
           </Button>

@@ -21,6 +21,7 @@ import {
 } from "./organisation.service";
 import type { UtilisateurAuthentifie } from "../middlewares/auth.middleware";
 import { contrainteOrganisation, verifierVisibilite } from "./tenant";
+import { BOM_UTF8, ligneCSV } from "../utils/csv";
 
 /** Include Prisma : nombre d'installations (= sièges utilisés). */
 const includeComplet = {
@@ -219,6 +220,42 @@ export async function supprimerLogiciel(
 ) {
   await verifierLogiciel(id, utilisateur);
   await prisma.logiciel.delete({ where: { id } });
+}
+
+/** Export CSV des licences (scope tenant appliqué). */
+export async function exporterLogicielsCSV(
+  utilisateur: UtilisateurAuthentifie,
+): Promise<string> {
+  const logiciels = await listerLogiciels({}, utilisateur);
+  const lignes = [
+    ligneCSV([
+      "Id",
+      "Logiciel",
+      "Éditeur",
+      "Clé",
+      "Type",
+      "Sièges utilisés",
+      "Sièges totaux",
+      "Coût annuel (EUR)",
+      "Date d'achat",
+      "Expiration",
+    ]),
+    ...logiciels.map((logiciel) =>
+      ligneCSV([
+        logiciel.id,
+        logiciel.logiciel,
+        logiciel.editeur,
+        logiciel.cle,
+        logiciel.type,
+        logiciel.siegesUtilises,
+        logiciel.siegesTotal ?? "",
+        logiciel.coutAnnuel ?? "",
+        logiciel.dateAchat.toISOString().slice(0, 10),
+        logiciel.dateExpiration?.toISOString().slice(0, 10) ?? "",
+      ]),
+    ),
+  ];
+  return `${BOM_UTF8}${lignes.join("\n")}`;
 }
 
 // ---------------------------------------------------------------- Utilitaires

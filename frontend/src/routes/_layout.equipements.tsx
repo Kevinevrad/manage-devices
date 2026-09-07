@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { IconDeviceDesktop, IconDownload, IconPlus } from "@tabler/icons-react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
 
 import {
   Button,
@@ -16,6 +17,7 @@ import { MetricsSection } from "@/components/sections/metrics";
 import { EquipementsTable } from "@/components/tables";
 import { useEquipements } from "@/hooks/api";
 import { construireEquipementsStats } from "@/lib/stats";
+import { exportarCSV } from "@/lib/export";
 
 export const Route = createFileRoute("/_layout/equipements")({
   /** Synchronise la catégorie du sous-menu avec l'URL (?categorie=…) */
@@ -32,6 +34,12 @@ function EquipementsPage() {
   const [formulaireOuvert, setFormulaireOuvert] = useState(false);
   const [equipementEnEdition, setEquipementEnEdition] =
     useState<Equipement | null>(null);
+
+  const exporter = () => {
+    void exportarCSV("/equipements/export", "equipements.csv").catch(() =>
+      toast.error("Export impossible."),
+    );
+  };
   const {
     data: equipements,
     isPending,
@@ -85,7 +93,7 @@ function EquipementsPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline">
+          <Button variant="outline" onClick={exporter}>
             <IconDownload size={16} />
             Exporter
           </Button>

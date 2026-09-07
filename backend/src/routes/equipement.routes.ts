@@ -6,6 +6,8 @@ const equipementRoutes = Router();
 
 equipementRoutes.get("/", controller.lister);
 equipementRoutes.post("/", controller.creer);
+// L'export doit être déclaré avant la route /:id (qui capturerait "export")
+equipementRoutes.get("/export", controller.exporter);
 equipementRoutes.get("/:id", controller.obtenir);
 equipementRoutes.put("/:id", controller.modifier);
 equipementRoutes.delete("/:id", controller.supprimer);

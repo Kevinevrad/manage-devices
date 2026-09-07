@@ -41,6 +41,17 @@ export async function modifier(req: Request, res: Response): Promise<void> {
   res.json(logiciel);
 }
 
+/** GET /api/logiciels/export — export CSV des licences (scope tenant). */
+export async function exporter(req: Request, res: Response): Promise<void> {
+  const csv = await logicielService.exporterLogicielsCSV(
+    authentifieRequis(req),
+  );
+  res
+    .set("Content-Type", "text/csv; charset=utf-8")
+    .set("Content-Disposition", 'attachment; filename="licences.csv"')
+    .send(csv);
+}
+
 /** DELETE /api/logiciels/:id */
 export async function supprimer(req: Request, res: Response): Promise<void> {
   await logicielService.supprimerLogiciel(
