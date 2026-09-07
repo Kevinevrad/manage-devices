@@ -6,7 +6,11 @@ import { Button, ChargementDonnees, ErreurDonnees } from "@/components";
 import { MetricsSection } from "@/components/sections/metrics";
 import { ChartsSection } from "@/components/sections/charts";
 import { useAuth } from "@/hooks/auth";
-import { useEquipements, useLicences } from "@/hooks/api";
+import { useAffectations, useEquipements, useLicences } from "@/hooks/api";
+import {
+  construireEquipementsParStatut,
+  construireTendanceAffectations,
+} from "@/lib/graphiques";
 import { construireStatsDashboard } from "@/lib/stats";
 
 const today = new Date().toLocaleDateString("fr-FR", {
@@ -36,6 +40,7 @@ function DashboardPage() {
     error: erreurLicences,
     refetch: rechargerLicences,
   } = useLicences();
+  const { data: affectations } = useAffectations();
 
   const stats = useMemo(
     () =>
@@ -43,6 +48,17 @@ function DashboardPage() {
         ? construireStatsDashboard(equipements, licences)
         : [],
     [equipements, licences],
+  );
+
+  // Graphiques alimentés par les données réelles (affectations optionnelles :
+  // la tendance affiche des zéros tant qu'elles ne sont pas chargées)
+  const repartitionStatut = useMemo(
+    () => construireEquipementsParStatut(equipements ?? []),
+    [equipements],
+  );
+  const tendance = useMemo(
+    () => construireTendanceAffectations(affectations ?? []),
+    [affectations],
   );
 
   const erreur = echecEquipements
@@ -104,7 +120,10 @@ function DashboardPage() {
       ) : (
         <>
           <MetricsSection stats={stats} />
-          <ChartsSection />
+          <ChartsSection
+            equipementsParStatut={repartitionStatut}
+            tendanceAffectations={tendance}
+          />
         </>
       )}
     </div>

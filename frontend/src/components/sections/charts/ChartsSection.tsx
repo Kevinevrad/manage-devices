@@ -19,20 +19,18 @@ import {
   ChartTooltipContent,
 } from "@/components";
 import { cn } from "@/lib/utils";
-import {
-  affectationsChartConfig,
-  affectationsTrend,
-  equipementsParStatut,
-  statutChartConfig,
-} from "@/data/charts";
+import { affectationsChartConfig, statutChartConfig } from "@/data/charts";
 import type { ChartsSectionProps } from "./charts-section.types";
 
-const totalEquipements = equipementsParStatut.reduce(
-  (acc, statut) => acc + statut.total,
-  0,
-);
-
-export const ChartsSection = ({ className }: ChartsSectionProps) => {
+export const ChartsSection = ({
+  className,
+  equipementsParStatut,
+  tendanceAffectations,
+}: ChartsSectionProps) => {
+  const totalEquipements = equipementsParStatut.reduce(
+    (acc, statut) => acc + statut.total,
+    0,
+  );
   return (
     <section className={cn("grid gap-4 lg:grid-cols-5", className)}>
       <Card className="lg:col-span-3">
@@ -47,7 +45,10 @@ export const ChartsSection = ({ className }: ChartsSectionProps) => {
             config={affectationsChartConfig}
             className="aspect-auto h-56 w-full"
           >
-            <AreaChart data={affectationsTrend} margin={{ left: 4, right: 12 }}>
+            <AreaChart
+              data={tendanceAffectations}
+              margin={{ left: 4, right: 12 }}
+            >
               <defs>
                 <linearGradient id="fillAffectations" x1="0" y1="0" x2="0" y2="1">
                   <stop
